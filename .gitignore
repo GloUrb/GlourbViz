@@ -1,0 +1,7 @@
+# et ..jamais la data sur git
+data/ 
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
