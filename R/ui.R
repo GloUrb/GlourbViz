@@ -9,32 +9,63 @@ ui <- fluidPage(includeCSS("www/css.css"),
                   ############################ ONGLET N°2 ##################################
                   
                   tabPanel("Global Idea", "Contenu global..."),
-                  tabPanel("Indicator", # la sidebar est un div indépendant (pas sidebarLayout) -> meilleur contrôle visuel
-                           tags$div(
-                             id = "leftSidebar",
-                             tags$div(class = "mini-box",
-                                      tags$strong("Filtres"),
-                                      selectInput("Ind", "Indicator", choices = c("Biodiversity", "economy", "discours")),
-                                      selectInput("Var", "variable", choices = c("oiseau", "sediment"))
-                             ),
-                             tags$div(class = "mini-box",
-                                      tags$strong("Localisation"),
-                                      leaflet::leafletOutput("mini_map", height = "150px")
-                             ),
-                             tags$div(class = "mini-box",
-                                      tags$strong("Data Quality"),
-                                      plotOutput("mini_plot", height = "150px")
-                             )
-                           ),
-                           
-                           # zone principale --> cadre texte en haut, grande carte en bas
-                           tags$div(
-                             id = "mainContent",
-                             tags$div(class = "box-info",
-                                      tags$h4("Informations"),
-                                      verbatimTextOutput("notes")),    #textOutput si je souhaite enlever la box autour de thème selectionné...se fait nat à cause de bootstrap
-                             tags$div(leaflet::leafletOutput("map",height = "450px"))
-                           ),
+                  
+                  ########################### ONGLET N°2 ###################################
+                  tabPanel(
+                    "Indicator",
+                    tags$div(
+                      id = "indicatorLayout",
+                      
+                      # SIDEBAR GAUCHE
+                      tags$div(
+                        id = "leftSidebar",
+                        # Filtres
+                        tags$div(
+                          class = "mini-box",
+                          tags$strong("Filtres"),
+                          selectInput(
+                            "Ind","Indicator",
+                            choices = c("Biodiversity","economy","discours")
+                          ),
+                          
+                          uiOutput("variable_selector")
+                        ),
+                        
+                        # Localisation
+                        tags$div(
+                          class = "mini-box",
+                          tags$strong("Localisation"),
+                          leaflet::leafletOutput(
+                            "mini_map",
+                            height = "20vh"
+                          )
+                        ),
+                        
+                        # Nuage de mots
+                        tags$div(
+                          class = "mini-box",
+                          uiOutput("cloud_title"),
+                          uiOutput("cloud_content")
+                        )
+                      ),
+                      
+                      # ZONE PRINCIPALE
+                      tags$div(
+                        id = "mainContent",
+                        tags$div(
+                          class = "box-info",
+                          tags$h4("Indicator and data information"),
+                          verbatimTextOutput("notes") #textOutput si je souhaite enlever la box autour de thème selectionné...se fait nat à cause de bootstrap
+                        ),
+                        
+                        tags$div(
+                          leaflet::leafletOutput(
+                            "map",
+                            height = "70vh"
+                          )
+                        )
+                      )
+                    )
                   ),
                   
                   ############################ ONGLET N°3 ##################################

@@ -1,45 +1,64 @@
 /* Onglet 2 */
 
-#leftSidebar {
-  position: absolute;
-  top: 60px;
-  left: 10px;
-  height: 580px;
-  width: 300px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  transition: transform 0.25s ease;
+/* Organisation générale essayer de respecter --> 
+   -> 1/4 de l'espace pour la sidebar
+   -> 3/4 pour la carte et les informations */
+
+#indicatorLayout {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 1rem;
+  width: 98%;
+  margin: 1rem auto;
+
+  /* Empêche la sidebar de s'étirer
+     jusqu'à la hauteur de la grande carte */
+  align-items: start;
 }
+
+
+/* Sidebar gauche */
+
+#leftSidebar {
+  background: #fff;
+  border: 0.1rem solid #ddd;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.12);
+}
+
+
+/* Zone principale */
 
 #mainContent {
-  position: absolute;
-  top: 60px;
-  left: 320px;
-  width: 920px;
-  border: 1px;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 10px;
   background: #fff;
+  padding: 0.6rem;
+  border-radius: 0.4rem;
 }
 
-/* Style par défaut pour mini-box et box-info (appliqué aux onglets 2 et 3) */
+
+/* Petites boîtes de la sidebar */
+
 .mini-box {
-  margin-bottom: 8px;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #e6e6e6;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.4rem;
+  border: 0.06rem solid #e6e6e6;
   background: #fafafa;
 }
 
+
+/* Boîte d'informations au-dessus de la carte */
 .box-info {
   background: #fafafa;
 }
 
 
+/* Permet aux menus déroulants de passer
+   correctement au-dessus des catrucs de la carte */
+.selectize-dropdown {
+  z-index: 9999 !important;
+}
 
 /* Onglet 3 */
 
