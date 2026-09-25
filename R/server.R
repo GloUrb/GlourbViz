@@ -6,15 +6,64 @@ server <- function(input, output, session) {
   
   
   # Bloc d'information
-  output$notes <- renderText({
-    if (input$Ind == "discours") {
-      paste(
-        "Selected indicator:",
-        input$Ind,
-        "-",
-        input$word_discours
+  output$notes <- renderUI({
+    
+    if (input$Ind == "Discourses of the Web") {
+      
+      tags$div(
+        class = "indicator-panel",
+        
+        # Les deux colonnes
+        tags$div(
+          class = "indicator-columns",
+          
+          # Colonne 1
+          tags$div(
+            class = "indicator-column",
+            
+            tags$strong("About the indicator"),
+            
+            tags$p(
+              "Web discourses provide insights into how urban rivers are 
+            represented and discussed in digital spaces. This indicator 
+            is based on web pages related to urban rivers worldwide, 
+            collected through web scraping. These data can be used to 
+            explore the digital visibility and representations of urban 
+            rivers across cities and regions of the world."
+            )
+          ),
+          
+          # Colonne 2
+          tags$div(
+            class = "indicator-column",
+            
+            tags$strong("Interpretation & limitations"),
+            
+            tags$p(
+              "Digital representations of urban rivers are unevenly produced."
+            ),
+            
+            tags$p(
+              "Web discourses about water can be understood as a digital 
+            extension of the hydrosocial cycle."
+            )
+          )
+        ),
+        
+        # Sélection actuelle
+        tags$div(
+          class = "current-selection",
+          
+          'Selected indicator "',
+          tags$strong(input$Ind),
+          '" to study the word ↬ "',
+          tags$strong(input$word_discours),
+          '"'
+        )
       )
+      
     } else {
+      
       paste(
         "Selected indicator :",
         input$Ind,
@@ -27,7 +76,7 @@ server <- function(input, output, session) {
   
   # Sélecteur dynamique de variable / mot
   output$variable_selector <- renderUI({
-    if (input$Ind == "discours") {
+    if (input$Ind == "Discourses of the Web") {
       selectInput(
         "word_discours","Word",
         choices = sort(
@@ -86,7 +135,7 @@ server <- function(input, output, session) {
           paste0(
             'No context words meet the thresholds for “',
             input$word_discours,
-            '” (specificity ≥ 2; n ≥ 5).'
+            '” (specificity ≥ 2).'
           )
         )
       } else {
@@ -105,17 +154,51 @@ server <- function(input, output, session) {
             '” occurs in the corpus for ',
             ville$urban_aggl[1],
             ', but no context words meet the thresholds ',
-            '(specificity ≥ 2; n ≥ 5).'
+            '(specificity ≥ 2).'
           )
         )
       }
     } else {
       plotOutput(
         "mini_plot",
-        height = "150px"
+        height = "25vh" # Emilie oublies pas c'est la taille du nuage
       )
     }
   })
+  
+  # La petite boite sous le nuage de mots qui explique 
+  output$cloud_explanation <- renderUI({
+    req(input$word_discours)
+    data_cloud <- context_cloud_data()
+    # S'il n'y a pas de nuage de mots, pas de bloc explicatif
+    if (nrow(data_cloud) == 0) {
+      return(NULL)
+    }
+    tags$div(
+      class = "mini-box cloud-explanation",
+      tags$strong("How to read this word cloud?"),
+      tags$p(
+        "This word cloud displays context words that are specifically ",
+        "associated with the selected term (specificity ≥ 2)."
+      ),
+      tags$p(
+        "Word size represents its relative frequency among the selected ",
+        "context words, while color indicates its number of occurrences (n)."
+      )
+    )
+  })
+  
+# le bouton dans le nuage qui permet de revenir au global 
+  output$global_view_button <- renderUI({
+    if (is.null(selected_city_id())) {
+      return(NULL)
+    }
+    actionLink(
+      "global_view",
+      "↩ Global view"
+    )
+  })
+  
   
   
                     ## REACTIVES
@@ -186,10 +269,8 @@ server <- function(input, output, session) {
   
   
   ## GRANDE CARTE 
-  
-  
   output$map <- leaflet::renderLeaflet({
-    if (input$Ind == "discours") {
+    if (input$Ind == "Discourses of the Web") {
       data_map <- discours_map_data()
       pal <- discours_palette()
       leaflet::leaflet(data_map) |>
@@ -251,8 +332,6 @@ server <- function(input, output, session) {
   
   
   ## MINI CARTE
-  
-  
   # Mini-carte initiale
   output$mini_map <- leaflet::renderLeaflet({
     leaflet::leaflet() |>
@@ -273,7 +352,6 @@ server <- function(input, output, session) {
   observeEvent(input$word_discours, {
     selected_city_id(NULL)
   })
-  
   
   # Interaction grande carte -> mini-carte
   observeEvent(input$map_marker_click, {
@@ -311,18 +389,10 @@ server <- function(input, output, session) {
         fillOpacity = 0,
         group = "selected_city"
       )
-    # puis MINI-CARTE
-    leaflet::leafletProxy("mini_map") |>
+    # puis MINI-CARTE (d'abord on recup la ville puis on regarde si elle à une geom dans "zone")
+    mini_map <- leaflet::leafletProxy("mini_map") |>
       leaflet::clearShapes() |>
       leaflet::clearMarkers() |>
-      leaflet::addPolygons(
-        data = zone_selected,
-        fillColor = ~pal(reach),
-        color = "black",
-        weight = 1,
-        fillOpacity = 0.7,
-        label = ~reach
-      ) |>
       leaflet::addCircleMarkers(
         lng = ville$lon[1],
         lat = ville$lat[1],
@@ -332,7 +402,34 @@ server <- function(input, output, session) {
         fillOpacity = 0.7,
         popup = ville$urban_aggl[1]
       )
-  
+    if (nrow(zone_selected) > 0) {
+      mini_map |>
+        leaflet::addPolygons(
+          data = zone_selected,
+          fillColor = ~pal(reach),
+          color = "black",
+          weight = 1,
+          fillOpacity = 0.7,
+          label = ~reach
+        )
+      bbox <- sf::st_bbox(zone_selected)
+      mini_map |>
+        leaflet::fitBounds(
+          lng1 = unname(bbox["xmin"]),
+          lat1 = unname(bbox["ymin"]),
+          lng2 = unname(bbox["xmax"]),
+          lat2 = unname(bbox["ymax"])
+        )
+    } else {
+      mini_map |>
+        leaflet::setView(
+          lng = ville$lon[1],
+          lat = ville$lat[1],
+          zoom = 8
+        )
+    }
+    
+
     # Cadrage auto  mini-carte
     if (nrow(zone_selected) > 0) {
       bbox <- sf::st_bbox(
@@ -348,36 +445,139 @@ server <- function(input, output, session) {
     }
   })
   
+  #Go gO GOOO revient sur la carte et le nuage global (surtout le nuage enfaite) clic dans le fond de carte 
+  observeEvent(input$map_click, {
+    selected_city_id(NULL)
+    # Supp le contour bleu de la ville séle
+    leaflet::leafletProxy("map") |>
+      leaflet::clearGroup("selected_city")
+    # Remet la mini-carte en global
+    leaflet::leafletProxy("mini_map") |>
+      leaflet::clearShapes() |>
+      leaflet::clearMarkers() |>
+      leaflet::setView(
+        lng = 0,
+        lat = 20,
+        zoom = 1
+      )
+  })
   
-  # sortie du NUAGE DE MOTS 
-  output$mini_plot <- renderPlot({
-    data_cloud <- context_cloud_data()
-    req(nrow(data_cloud) > 0)
-    data_cloud <- calculate_wordcloud_frequency(
-      data_cloud
-    )
-    data_cloud |>
-      dplyr::slice_max(
-        order_by = spec,
-        n = 20,
-        with_ties = FALSE
-      ) |>
-      ggplot2::ggplot(
-        ggplot2::aes(
-          label = context_word,
-          size = freq
-        )
-      ) +
-      ggwordcloud::geom_text_wordcloud() +
-      ggplot2::scale_size_area(
-        max_size = 10
-      ) +
-      ggplot2::theme_void()
+  # la m^me que celle du dessus mais enfaite sur le bouton global view comme aç les gens pvt revenir au nuage global en cliquant
+  observeEvent(input$global_view, {
+    selected_city_id(NULL)
+    # Supp le contour bleu de la ville sélec
+    leaflet::leafletProxy("map") |>
+      leaflet::clearGroup("selected_city")
+    # Remet la mini-carte
+    leaflet::leafletProxy("mini_map") |>
+      leaflet::clearShapes() |>
+      leaflet::clearMarkers() |>
+      leaflet::setView(
+        lng = 0,
+        lat = 30,
+        zoom = 1
+      )
   })
   
   
+  # Sortie du NUAGE DE MOTS
+  output$mini_plot <- renderPlot({
+    data_cloud <- context_cloud_data()
+    req(nrow(data_cloud) > 0)
+  #mince la legende est trop bizarre on va la gerer comme ça --> 
+    # Largeur actuelle du graphique dans le navigateur
+    plot_width <- session$clientData$output_mini_plot_width
+    # Taille dynamique de la légende
+    legend_title_size <- max(
+      7,
+      min(11, plot_width * 0.03)
+    )
+    legend_text_size <- max(
+      6,
+      min(10, plot_width * 0.025)
+    )
+    # Calcul de la fréquence 
+    data_cloud <- calculate_wordcloud_frequency(data_cloud)
+    # Classes de n différentes selon l'échelle
+    if (is.null(selected_city_id())) {
+      
+      # GLOBAL (monde)
+      data_cloud <- data_cloud |>
+        dplyr::mutate(
+          n_class = dplyr::case_when(
+            n < 25 ~ "n < 25",
+            n < 100 ~ "25 ≤ n < 100",
+            TRUE ~ "n ≥ 100"
+          )
+        )
+      colors_n <- c(
+        "n < 25" = "grey70",
+        "25 ≤ n < 100" = "black",
+        "n ≥ 100" = "red"
+      )
+      
+    } else {
+      
+      # VILLE
+      data_cloud <- data_cloud |>
+        dplyr::mutate(
+          n_class = dplyr::case_when(
+            n <= 2 ~ "n ≤ 2",
+            n <= 5 ~ "3 ≤ n ≤ 5",
+            TRUE ~ "n ≥ 6"
+          )
+        )
+      colors_n <- c(
+        "n ≤ 2" = "grey70",
+        "3 ≤ n ≤ 5" = "black",
+        "n ≥ 6" = "red"
+      )
+    }
+    
+    # Sélection des 20 mots ayant les fréquences les plus élevées
+    data_cloud <- data_cloud |>
+      dplyr::slice_max(
+        order_by = freq,
+        n = 20,
+        with_ties = FALSE
+      )
+    # le Nuage de mots : comment il est fait 
+    ggplot2::ggplot(
+      data_cloud,
+      ggplot2::aes(
+        label = context_word,
+        size = freq,
+        color = n_class
+      )
+    ) +
+      ggwordcloud::geom_text_wordcloud(
+        show.legend = TRUE,
+        key_glyph = "point"
+      ) +
+      ggplot2::scale_size_continuous(
+        range = c(5,10),
+        guide = "none"
+      ) +
+      ggplot2::scale_color_manual(
+        name = "Number of occurrences of a word (n)",
+        values = colors_n,
+        breaks = names(colors_n)
+      ) +
+      ggplot2::theme_void() +
+      ggplot2::theme(
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.title = ggplot2::element_text(
+          size = legend_title_size
+        ),
+        legend.text = ggplot2::element_text(
+          size = legend_text_size
+        )
+      )
+  })
   
   
+
   ############################ onglet N°3 ##################################
   
   output$Explication <- renderText({
@@ -435,7 +635,6 @@ server <- function(input, output, session) {
       ) +
       
       labs(x = NULL, y = NULL) +
-      
       theme_minimal() +
       theme(
         legend.position = "right",

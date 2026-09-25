@@ -22,10 +22,10 @@ ui <- fluidPage(includeCSS("www/css.css"),
                         # Filtres
                         tags$div(
                           class = "mini-box",
-                          tags$strong("Filtres"),
+                          tags$strong("Filters"),
                           selectInput(
                             "Ind","Indicator",
-                            choices = c("Biodiversity","economy","discours")
+                            choices = c("Biodiversity","Economy","Discourses of the Web")
                           ),
                           
                           uiOutput("variable_selector")
@@ -37,7 +37,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           tags$strong("Localisation"),
                           leaflet::leafletOutput(
                             "mini_map",
-                            height = "20vh"
+                            height = "25vh"
                           )
                         ),
                         
@@ -45,8 +45,10 @@ ui <- fluidPage(includeCSS("www/css.css"),
                         tags$div(
                           class = "mini-box",
                           uiOutput("cloud_title"),
+                          uiOutput("global_view_button"),
                           uiOutput("cloud_content")
-                        )
+                        ),
+                          uiOutput("cloud_explanation")
                       ),
                       
                       # ZONE PRINCIPALE
@@ -55,13 +57,12 @@ ui <- fluidPage(includeCSS("www/css.css"),
                         tags$div(
                           class = "box-info",
                           tags$h4("Indicator and data information"),
-                          verbatimTextOutput("notes") #textOutput si je souhaite enlever la box autour de thème selectionné...se fait nat à cause de bootstrap
+                          uiOutput("notes") #verbatimTextOutput met une boite | textOutput si je souhaite enlever la box autour de thème selectionné...se fait nat à cause de bootstrap
                         ),
-                        
                         tags$div(
                           leaflet::leafletOutput(
                             "map",
-                            height = "70vh"
+                            height = "75vh"
                           )
                         )
                       )

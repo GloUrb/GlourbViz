@@ -3,7 +3,6 @@
 # calcul la freq des mots pour le contexte
 
 calculate_wordcloud_frequency <- function(data) {
-  
   data |>
     dplyr::mutate(
       freq = n / sum(n, na.rm = TRUE) * 100

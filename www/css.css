@@ -10,15 +10,13 @@
   gap: 1rem;
   width: 98%;
   margin: 1rem auto;
-
   /* Empêche la sidebar de s'étirer
      jusqu'à la hauteur de la grande carte */
   align-items: start;
 }
 
 
-/* Sidebar gauche */
-
+/* Sidebar sur le coté gauche le truc avec les boites */
 #leftSidebar {
   background: #fff;
   border: 0.1rem solid #ddd;
@@ -28,17 +26,25 @@
 }
 
 
-/* Zone principale */
-
+/* Zone principale (carte +infos) */
 #mainContent {
   background: #fff;
-  padding: 0.6rem;
+  padding: 0;
   border-radius: 0.4rem;
 }
 
 
-/* Petites boîtes de la sidebar */
+/* Ducoup pour la boîte d'infos au-dessus de la carte */
+.box-info h4 {
+  margin-top: 0;
+  font-weight: bold;
+}
+.box-info {
+  background: #fafafa;
+}
 
+
+/* Petites boîtes de la sidebar */
 .mini-box {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
@@ -47,18 +53,53 @@
   background: #fafafa;
 }
 
-
-/* Boîte d'informations au-dessus de la carte */
-.box-info {
-  background: #fafafa;
-}
-
-
 /* Permet aux menus déroulants de passer
    correctement au-dessus des catrucs de la carte */
 .selectize-dropdown {
   z-index: 9999 !important;
 }
+
+/* Pour l'explication du nuage de mots*/
+.cloud-explanation {
+   font-size: 1.3rem;
+  padding: 0.8rem;
+}
+.cloud-explanation p {
+  margin-top: 0.4rem;
+  margin-bottom: 0;
+}
+
+/*pour  le bloc d'info */
+.indicator-columns {
+  display: flex;
+  gap: 20px;
+}
+
+.indicator-column {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.indicator-column p {
+  margin-top: 8px;
+  margin-bottom: 5px;
+}
+
+.current-selection {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+@media (max-width: 900px) {
+  .indicator-columns {
+    flex-direction: column;
+  }
+}
+
 
 /* Onglet 3 */
 
