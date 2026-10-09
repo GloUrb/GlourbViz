@@ -1,16 +1,14 @@
 ################################## COTE UI ##################################################
 
 ui <- fluidPage(includeCSS("www/css.css"),
+                shinyjs::useShinyjs(),
                 navbarPage(
-                  title = div("GloUrbView"),
-                  windowTitle = "GloUrbView",
+                  title = div("GloUrbViz"),
+                  windowTitle = "GloUrbViz",
                   id = "nav",
                   
-                  ############################ ONGLET N°2 ##################################
                   
-                  tabPanel("Global Idea", "Contenu global..."),
-                  
-                  ########################### ONGLET N°2 ###################################
+                  ########################### ONGLET indicator  ###################################
                   tabPanel(
                     "Indicator",
                     tags$div(
@@ -69,34 +67,202 @@ ui <- fluidPage(includeCSS("www/css.css"),
                     )
                   ),
                   
+                  ############################ ONGLET landscape changes ##################################
+                
+                  tabPanel(
+                    "Landscape changes",
+                    # Boutons 
+                    uiOutput("landscape_view_buttons"),
+                    
+                                                        #le bt global view (onglet)
+                    tags$div(
+                      id = "landscapeGlobal",
+                      # Colonne gauche
+                      tags$div(
+                        id = "landscapeGlobalSidebar",
+                        # bloc Information
+                        tags$div(
+                          class = "landscape-box",
+                          tags$h4("Information"),
+                          tags$p(
+                            "Information about the selected landscape indicator."
+                          )
+                        ),
+                        
+                        # bloc choix donnée
+                        tags$div(
+                          class = "landscape-box",
+                          tags$h4("Display"),
+                          # Choix du mode de cartographie
+                          tags$div(
+                            class = "landscape-mode-switch",
+                            radioButtons(
+                              "landscape_global_mode",
+                              NULL,
+                              choices = c(
+                                "Number" = "number",
+                                "Typology" = "typology"
+                              ),
+                              selected = "number",
+                              inline = TRUE
+                            )
+                          ),
+                          tags$hr(class = "landscape-display-divider"),
+                          # Choix de l'indicateur
+                          tags$strong("Indicator"),
+                          radioButtons(
+                            "landscape_global_variable",
+                            NULL,
+                            choices = c(
+                              "Impacts" = "impact",
+                              "Pressures" = "pressure",
+                              "Drivers" = "driver"
+                            ),
+                            selected = "impact"
+                          ),
+                          # Liste des catégories (mode Typology uniquement)
+                          conditionalPanel(
+                            condition = "input.landscape_global_mode == 'typology'",
+                            tags$strong("Category"),
+                            selectInput(
+                              "landscape_global_category",
+                              NULL,
+                              choices = NULL
+                            )
+                          ),
+                          # Choix de la zone
+                          tags$strong("Zone"),
+                          
+                          radioButtons(
+                            "landscape_global_zone",
+                            NULL,
+                            choices = c(
+                              "Whole area" = "tot",
+                              "Corridor" = "cor",
+                              "Plain" = "pl"
+                            ),
+                            selected = "tot"
+                          )
+                        )
+                      ),
+                      
+                      # Partie centrale :  la map
+                      tags$div(
+                        id = "landscapeGlobalMain",
+                        tags$div(
+                          class = "landscape-map-box",
+                          leaflet::leafletOutput(
+                            "landscape_global_map",
+                            height = "65vh"
+                          )
+                        )
+                      )
+                    ),
+                  
+                                                          # le bt city (onglet)
+                    tags$div(
+                      id = "landscapeCity",
+                      tags$div(
+                        id = "landscapeCityLayout",
+                        
+
+                        # COLONNE GAUCHE
+                        tags$div(
+                          id = "landscapeCitySidebar",
+                          
+                          tags$div(
+                            class = "landscape-box",
+                            id = "landscapeCityInfo",
+                            tags$h4("Information"),
+                            tags$p("Select an element to display more information.")
+                          ),
+                          
+                          tags$div(
+                            class = "landscape-box",
+                            id = "landscapeCitySelection",
+                            
+                            tags$h4("Selection"),
+                            
+                            selectInput(
+                              "landscape_city_selected",
+                              "City",
+                              choices = NULL
+                            ),
+                            
+                            tags$strong("Zone"),
+                            
+                            radioButtons(
+                              "landscape_zone_selected",
+                              NULL,
+                              choices = c(
+                                "Corridor" = "corridor",
+                                "Plain" = "plain"
+                              ),
+                              selected = "corridor"
+                            )
+                          ),
+                          
+                          tags$div(
+                            class = "landscape-box",
+                            id = "landscapeDataQuality",
+                            
+                            tags$h4("Data quality"),
+                            
+                            tags$p(
+                              "Methodological information about the interpretation of landscape changes."
+                            )
+                          )
+                        ),
+                        
+                        
+                        # COLONNE DROITE
+                        tags$div(
+                          id = "landscapeCityMain",
+                          
+                          tags$div(
+                            class = "landscape-box",
+                            id = "landscapeCityGraph",
+                            
+                            tags$h4("Riverscape changes: status of the zones"),
+                            
+                            tags$div(
+                              class = "landscape-placeholder-small",
+                              "LANDSCAPE CHANGE GRAPH"
+                            )
+                          ),
+                          
+                          tags$div(
+                            class = "landscape-map-box",
+                            id = "landscapeCityMap",
+                            
+                            tags$div(
+                              class = "landscape-placeholder",
+                              "CITY MAP"
+                            )
+                          )
+                        )
+                      ),
+                      
+                      
+
+                      # INTERPRETATION
+                      tags$div(
+                        class = "landscape-box",
+                        id = "landscapeInterpretation",
+                        
+                        tags$h4("Interpretation of observed landscape changes"),
+                        
+                        tags$div(
+                          class = "landscape-interpretation-placeholder",
+                          "IMPACTS / PRESSURES / DRIVERS"
+                        )
+                      )
+                    )
+                  ),
+                  
                   ############################ ONGLET N°3 ##################################
                   
-                  tabPanel("Landscape changes",
-                           tags$div(
-                             id = "leftSidebar3",
-                             tags$div(class = "mini-box",
-                                      selectInput("ipd", "understand and analyze", choices = c("Impact","Pressure","Driver")),
-                                      verbatimTextOutput("Explication")
-                             ),
-                             tags$div(class = "mini-box",
-                                      tags$strong("Localisation"),
-                                      leaflet::leafletOutput("mini_map3", height = "150px")
-                             ),
-                             tags$div(class = "mini-box",
-                                      tags$strong("Data Quality"),
-                                      plotOutput("mini_plot3", height = "150px")
-                             )
-                           ),
-                           
-                           # zone principale --> cadre texte en haut, grande carte en bas
-                           tags$div(
-                             id = "mainContent3",
-                             tags$div(class = "box-info",
-                                      tags$h4("Riverscape changes : status of the zones")),
-                             tags$div(plotOutput("graphe_zones",height = "100px",width = "400px")),
-                             tags$div(leaflet::leafletOutput("map3",height = "450px"))
-                           ),
-                  ),
+                  tabPanel("Global Idea", "Contenu global..."),
                   
                   ############################ ONGLET N°4 ##################################
                   

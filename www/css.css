@@ -1,4 +1,4 @@
-/* Onglet 2 */
+                          /* Onglet indicator */
 
 /* Organisation générale essayer de respecter --> 
    -> 1/4 de l'espace pour la sidebar
@@ -40,7 +40,7 @@
   font-weight: bold;
 }
 .box-info {
-  background: #fafafa;
+  background: #fff;
 }
 
 
@@ -50,7 +50,7 @@
   padding: 0.5rem;
   border-radius: 0.4rem;
   border: 0.06rem solid #e6e6e6;
-  background: #fafafa;
+  background: #fff;
 }
 
 /* Permet aux menus déroulants de passer
@@ -101,37 +101,275 @@
 }
 
 
-/* Onglet 3 */
+                      /* Onglet landscape changes */
 
-#leftSidebar3 {
-  position: absolute;
-  top: 60px;
-  left: 10px;
-  height: 580px;
-  width: 300px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  transition: transform 0.25s ease;
+#landscapeViewButtons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin: 0.8rem 1rem;
 }
 
-#mainContent3 {
-  position: absolute;
-  top: 60px;
-  left: 320px;
-  width: 920px;
-  height: 300px;
-  border: 1px;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  background: #fff;
+.landscape-view-btn {
+  background: white;
+  border: 0.1rem solid transparent;
+  border-radius: 0.4rem;
+}
+
+.landscape-view-btn.active {
+  border: 0.12rem solid #333;
+  font-weight: 600;
 }
 
 
-/* Onglet 4 */
+/* ================================
+   LANDSCAPES - GLOBAL VIEW
+   ================================ */
+
+#landscapeGlobal {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 1rem;
+  padding: 0 1rem 1rem 1rem;
+  align-items: start;
+}
+
+
+/* ----- LEFT SIDEBAR ----- */
+
+#landscapeGlobalSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* ----- BOXES ----- */
+
+.landscape-box {
+  background: white;
+  border: 0.08rem solid #d9d9d9;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+
+/* ----- MAIN CONTENT ----- */
+
+#landscapeGlobalMain {
+  width: 100%;
+}
+
+.landscape-map-box {
+  background: white;
+  border: 0.08rem solid #d9d9d9;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-height: 70vh;
+}
+
+
+/* TEMPORAIRE : juste pour visualiser la future carte */
+
+.landscape-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0.08rem dashed #bdbdbd;
+  border-radius: 0.4rem;
+
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* ================================
+   LANDSCAPES - CITY VIEW
+   ================================ */
+
+#landscapeCity {
+  padding: 0 1rem 1rem 1rem;
+}
+
+
+/* ----- ORGANISATION GENERALE ----- */
+
+/* 1/4 à gauche et 3/4 à droite */
+#landscapeCityLayout {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+
+/* ================================
+   COLONNE GAUCHE
+   ================================ */
+
+#landscapeCitySidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* Bloc information */
+
+#landscapeCityInfo {
+  min-height: 30rem;
+}
+
+
+/* ================================
+   COLONNE DROITE
+   ================================ */
+
+#landscapeCityMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* Bloc graphique */
+
+#landscapeCityGraph {
+  min-height: 16rem;
+}
+
+
+/* Placeholder temporaire du graphique */
+
+.landscape-placeholder-small {
+  min-height: 11rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0.08rem dashed #bdbdbd;
+  border-radius: 0.4rem;
+
+  font-weight: 600;
+}
+
+
+/* Carte */
+
+#landscapeCityMap {
+  min-height:0;
+}
+
+
+/* ================================
+   INTERPRETATION
+   ================================ */
+
+#landscapeInterpretation {
+  margin-top: 1rem;
+  min-height: 10rem;
+}
+
+
+.landscape-interpretation-placeholder {
+  min-height: 6rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0.08rem dashed #bdbdbd;
+  border-radius: 0.4rem;
+
+  font-weight: 600;
+}
+
+
+/* Hauteur carte Global */
+#landscapeGlobalMain .landscape-placeholder {
+  height: 65vh;
+}
+
+
+/* Hauteur carte City */
+#landscapeCityMap .landscape-placeholder {
+  height: 58vh;
+}
+
+/* -----------------------------------
+   LANDSCAPE - DISPLAY MODE
+----------------------------------- */
+
+.landscape-mode-switch {
+  background: #f1f2f4;
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+/* Supprimer les marges Shiny */
+.landscape-mode-switch .form-group {
+  margin: 0;
+}
+
+.landscape-mode-switch .shiny-options-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+/* Chaque bouton occupe la moitié */
+.landscape-mode-switch .radio-inline {
+  flex: 1;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Apparence des boutons */
+.landscape-mode-switch .radio-inline span {
+  display: block;
+  text-align: center;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+/* Masquer les boutons radio natifs */
+.landscape-mode-switch input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+}
+
+/* Bouton sélectionné */
+.landscape-mode-switch .radio-inline:has(input:checked) span {
+  background: #ffffff;
+  color: #222;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Bouton non sélectionné */
+.landscape-mode-switch .radio-inline:not(:has(input:checked)) span {
+  color: #666;
+}
+
+/* Survol */
+.landscape-mode-switch .radio-inline:hover span {
+  color: #222;
+}
+
+/* Séparation entre mode et options */
+.landscape-display-divider {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 1rem 0 1.25rem;
+}
+
+
+
+
+                                    /* Onglet 4 */
 
 #leftSidebarAbout {
   position: absolute;

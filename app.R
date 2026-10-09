@@ -1,9 +1,11 @@
+library(shinyjs)
 library(shiny)
 library(leaflet)
 library(ggplot2)
 library(sf)
 library(htmlwidgets)
 library(ggwordcloud)
+
 
 source("R/functions.R")
 source("R/load_data.R")

@@ -1,21 +1,34 @@
 # Chargement data 
 
+# landscape
+
 zone <- sf::st_read(
-  "data/plain_global_reach/plain_global_reach.shp"
+  "data/landscapes/study_area_reach_zone/study_area_reach_zone.shp"
 )
 
+landscape_global <- readRDS(
+  "data/landscapes/glourbviz_landscape_global.rds"
+)
+
+landscape_impacts <- readRDS(
+  "data/landscapes/glourbviz_landscape_impacts.rds"
+)
+
+
+# discoourses 
+
 lexique_discourses <- readxl::read_excel(
-  "data/lexique_discourses.xlsx"
+  "data/discourses/lexique_discourses.xlsx"
 )
 
 lexique_city_global <- readRDS(
-  "data/glourbviz_lexicon_discourses_city_global.rds"
+  "data/discourses/glourbviz_lexicon_discourses_city_global.rds"
 )
 
 context_specificities_selected <- readRDS(
-  "data/glourbviz_context_specificities_selected.rds"
+  "data/discourses/glourbviz_context_specificities_selected.rds"
 )
 
 context_specificities_selected_city <- readRDS(
-  "data/glourbviz_context_specificities_city_selected.rds"
+  "data/discourses/glourbviz_context_specificities_city_selected.rds"
 )

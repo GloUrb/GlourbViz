@@ -1,5 +1,7 @@
 
-#onglet 2
+
+
+    # Onglet indicator
 # calcul la freq des mots pour le contexte
 
 calculate_wordcloud_frequency <- function(data) {
@@ -10,9 +12,7 @@ calculate_wordcloud_frequency <- function(data) {
 }
 
 
-
-
-# Onglet 3 
+    # Onglet landscapes changes
 
 # Fonction couleur selon la valeur
 get_color <- function(valeur) {

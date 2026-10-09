@@ -2,7 +2,7 @@
 
 server <- function(input, output, session) {
   
-  ############################ onglet N°2 ##################################
+  ############################ onglet indicator ##################################
   
   
   # Bloc d'information
@@ -578,7 +578,237 @@ server <- function(input, output, session) {
   
   
 
-  ############################ onglet N°3 ##################################
+  ############################ onglet landscapes changes ##################################
+  
+  # La vue qui est sélec
+  landscape_view_selected <- reactiveVal("global")
+  observeEvent(input$landscape_global, {
+    landscape_view_selected("global")
+  })
+  observeEvent(input$landscape_city, {
+    landscape_view_selected("city")
+  })
+  
+  # Afficher la bonne vue
+  observe({
+    if (landscape_view_selected() == "global") {
+      shinyjs::show("landscapeGlobal")
+      shinyjs::hide("landscapeCity")
+    } else {
+      shinyjs::hide("landscapeGlobal")
+      shinyjs::show("landscapeCity")
+    }
+  })
+  
+  
+  # les 2 boutons 
+  output$landscape_view_buttons <- renderUI({
+    tags$div(
+      id = "landscapeViewButtons",
+      #bt 1
+      actionButton(
+        "landscape_global",
+        "Global view",
+        class = if (landscape_view_selected() == "global") {
+          "landscape-view-btn active"
+        } else {
+          "landscape-view-btn"
+        }
+      ),
+      #bt 2
+      actionButton(
+        "landscape_city",
+        "City view",
+        class = if (landscape_view_selected() == "city") {
+          "landscape-view-btn active"
+        } else {
+          "landscape-view-btn"
+        }
+      )
+    )
+  })
+  
+  
+  #creat variables
+  landscape_global_selected <- reactive({
+    variable_name <- paste0(
+      "n_",
+      input$landscape_global_variable,
+      "_",
+      input$landscape_global_zone
+    )
+    
+    change_name <- paste0(
+      "perc_change_",
+      input$landscape_global_zone
+    )
+    
+    indicator_label <- switch(
+      input$landscape_global_variable,
+      "impact" = "Number of impacts",
+      "pressure" = "Number of pressures",
+      "driver" = "Number of drivers"
+    )
+    
+    zone_label <- switch(
+      input$landscape_global_zone,
+      "tot" = "Whole area",
+      "cor" = "Corridor",
+      "pl" = "Plain"
+    )
+    
+    landscape_global |>
+      dplyr::mutate(
+        value = .data[[variable_name]],
+        change = .data[[change_name]],
+        indicator_label = indicator_label,
+        zone_label = zone_label
+      )
+  })
+  
+  
+  
+  landscape_radius <- function(x) {
+    sqrt(x) * 4
+  }
+
+  # la map centrale dans "GLOBAL VIEW"
+  output$landscape_global_map <- leaflet::renderLeaflet({
+    data_map <- landscape_global_selected() |>
+      dplyr::filter(
+        !is.na(value),
+        value > 0
+      )
+    # cercle prp
+    max_value <- max(data_map$value, na.rm = TRUE)
+    
+    legend_values <- sort(
+      unique(
+        pmax(1, round(c(
+          max_value / 4,
+          max_value / 2,
+          max_value
+        )))
+      ),
+      decreasing = TRUE
+    )
+    legend_radii <- sqrt(legend_values) * 4
+
+    # Palette 
+    pal_change <- leaflet::colorNumeric(
+      palette = c(
+        "#eff3ff",
+        "#bdd7e7",
+        "#6baed6",
+        "#2171b5",
+        "#084594"
+      ),
+      domain = c(0, 100),
+      na.color = "#BDBDBD"
+    )
+    
+    # Légende des cercles pro
+    max_radius <- max(legend_radii)
+    center_x <- max_radius + 12
+    bottom_y <- 2 * max_radius + 12
+    svg_width <- 2 * max_radius + 110
+    label_y <- seq(
+      from = 15,
+      by = 25,
+      length.out = length(legend_values)
+    )
+    svg_height <- max(
+      bottom_y + 12,
+      max(label_y) + 15
+    )
+    circles <- paste0(
+      '<circle cx="', center_x,
+      '" cy="', bottom_y - legend_radii,
+      '" r="', legend_radii,
+      '" fill="none" stroke="#333" stroke-width="1"/>',
+      collapse = ""
+    )
+    # Traits de lecture en cascade
+    labels <- paste0(
+      '<path d="M ', center_x, ' ',
+      bottom_y - 2 * legend_radii,
+      ' H ', center_x + max_radius + 15,
+      ' V ', label_y,
+      ' H ', center_x + max_radius + 35,
+      '" fill="none" stroke="#555" stroke-width="0.8"/>',
+      '<text x="', center_x + max_radius + 42,
+      '" y="', label_y + 4,
+      '" font-size="12" fill="#333">',
+      legend_values,
+      '</text>',
+      collapse = ""
+    )
+    legend_html <- paste0(
+      '<div style="
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+  ">',
+      '<strong>',
+      data_map$indicator_label[1],
+      '</strong>',
+      '<div>',
+      '<svg width="', svg_width,
+      '" height="', svg_height,
+      '" viewBox="0 0 ', svg_width, ' ', svg_height, '">',
+      circles,
+      labels,
+      '</svg>',
+      '</div></div>'
+    )
+    
+    leaflet::leaflet(data = data_map) |>
+      leaflet::addTiles() |>
+      leaflet::addCircleMarkers(
+        lng = ~Longitude,
+        lat = ~Latitude,
+        radius = ~sqrt(value) * 4,
+        fillColor = ~pal_change(change),
+        color = "#333333",
+        weight = 1,
+        fillOpacity = 0.8,
+        popup = ~paste0(
+          "<strong>", Urban_aggl, "</strong><br>",
+          "Zone: ", zone_label, "<br>",
+          indicator_label, ": ", value, "<br>",
+          "Proportion of pixels that changed: ",
+          ifelse(
+            is.na(change),
+            "No data",
+            paste0(round(change, 1), "%")
+          )
+        )
+      )|>
+      leaflet::addLegend(
+        position = "bottomright",
+        pal = pal_change,
+        values = c(0, 100),
+        labFormat = leaflet::labelFormat(
+          suffix = " %",
+          digits = 0
+        ),
+        title = "Proportion of pixels that changed",
+        opacity = 0.8
+      ) |>
+      leaflet::addControl(
+        html = htmltools::HTML(legend_html),
+        position = "bottomleft"
+      )
+  })
+  
+  
+  
+  
+  
+  
+  
+  #  ---------------------------------------------
   
   output$Explication <- renderText({
     paste("Explanation of the", input$ipd)
