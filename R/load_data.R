@@ -14,6 +14,12 @@ landscape_impacts <- readRDS(
   "data/landscapes/glourbviz_landscape_impacts.rds"
 )
 
+landscape_pixel <- readRDS("data/landscapes/glourbviz_landscape_pixels.rds"
+)
+
+infos <- readxl::read_xlsx("data/landscapes/info.xlsx"
+)
+
 
 # discoourses 
 

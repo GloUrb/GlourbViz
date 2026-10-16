@@ -84,9 +84,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                         tags$div(
                           class = "landscape-box",
                           tags$h4("Information"),
-                          tags$p(
-                            "Information about the selected landscape indicator."
-                          )
+                          uiOutput("landscape_category_definition")
                         ),
                         
                         # bloc choix donnée
@@ -123,11 +121,11 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           # Liste des catégories (mode Typology uniquement)
                           conditionalPanel(
                             condition = "input.landscape_global_mode == 'typology'",
-                            tags$strong("Category"),
                             selectInput(
                               "landscape_global_category",
                               NULL,
-                              choices = NULL
+                              choices = NULL,
+                              selectize = FALSE
                             )
                           ),
                           # Choix de la zone
@@ -159,7 +157,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                       )
                     ),
                   
-                                                          # le bt city (onglet)
+                                                          # le bt local (onglet)
                     tags$div(
                       id = "landscapeCity",
                       tags$div(
@@ -180,17 +178,13 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           tags$div(
                             class = "landscape-box",
                             id = "landscapeCitySelection",
-                            
                             tags$h4("Selection"),
-                            
                             selectInput(
                               "landscape_city_selected",
                               "City",
                               choices = NULL
                             ),
-                            
                             tags$strong("Zone"),
-                            
                             radioButtons(
                               "landscape_zone_selected",
                               NULL,
@@ -198,16 +192,14 @@ ui <- fluidPage(includeCSS("www/css.css"),
                                 "Corridor" = "corridor",
                                 "Plain" = "plain"
                               ),
-                              selected = "corridor"
+                              selected = "corridor" # defaut
                             )
                           ),
                           
                           tags$div(
                             class = "landscape-box",
                             id = "landscapeDataQuality",
-                            
                             tags$h4("Data quality"),
-                            
                             tags$p(
                               "Methodological information about the interpretation of landscape changes."
                             )
@@ -215,26 +207,32 @@ ui <- fluidPage(includeCSS("www/css.css"),
                         ),
                         
                         
-                        # COLONNE DROITE
+                        # COLONNE DROITE dedans il y a le graphe et la map ...
                         tags$div(
                           id = "landscapeCityMain",
-                          
                           tags$div(
                             class = "landscape-box",
                             id = "landscapeCityGraph",
-                            
-                            tags$h4("Riverscape changes: status of the zones"),
-                            
                             tags$div(
-                              class = "landscape-placeholder-small",
-                              "LANDSCAPE CHANGE GRAPH"
+                              class = "landscape-graph-title",
+                              tags$h4("Riverscape changes: status of the zones"),
+                              actionLink(
+                                inputId = "landscape_classification_info",
+                                label = "\u24D8",
+                                class = "landscape-info-icon"
+                              )
+                            ),
+                            #graphe
+                            plotOutput(
+                              "landscape_pixel_graph",
+                              width = "100%",
+                              height = "40vh"
                             )
                           ),
-                          
+                          #carte
                           tags$div(
                             class = "landscape-map-box",
                             id = "landscapeCityMap",
-                            
                             tags$div(
                               class = "landscape-placeholder",
                               "CITY MAP"
@@ -245,13 +243,11 @@ ui <- fluidPage(includeCSS("www/css.css"),
                       
                       
 
-                      # INTERPRETATION
+                      # INTERPRETATION bloc dedans on va retrouver les impacts et tout ..
                       tags$div(
                         class = "landscape-box",
                         id = "landscapeInterpretation",
-                        
                         tags$h4("Interpretation of observed landscape changes"),
-                        
                         tags$div(
                           class = "landscape-interpretation-placeholder",
                           "IMPACTS / PRESSURES / DRIVERS"

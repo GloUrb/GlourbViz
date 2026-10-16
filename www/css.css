@@ -366,7 +366,27 @@
   margin: 1rem 0 1.25rem;
 }
 
+/* Landscape : liste déroulante classique */
+#landscape_global_category {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
+
+.landscape-info-icon {
+  cursor: pointer;
+  color: #64748b;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.landscape-info-icon:hover {
+  color: #2171b5;
+  text-decoration: none;
+}
 
 
                                     /* Onglet 4 */

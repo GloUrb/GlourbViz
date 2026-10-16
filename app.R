@@ -5,7 +5,8 @@ library(ggplot2)
 library(sf)
 library(htmlwidgets)
 library(ggwordcloud)
-
+library(stats)
+library(bslib)
 
 source("R/functions.R")
 source("R/load_data.R")
