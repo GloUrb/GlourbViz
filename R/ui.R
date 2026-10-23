@@ -1,6 +1,8 @@
 ################################## COTE UI ##################################################
 
 ui <- fluidPage(includeCSS("www/css.css"),
+                tags$head(
+                  tags$script(src = "js/leaflet.pattern.js")),
                 shinyjs::useShinyjs(),
                 navbarPage(
                   title = div("GloUrbViz"),
@@ -206,7 +208,6 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           )
                         ),
                         
-                        
                         # COLONNE DROITE dedans il y a le graphe et la map ...
                         tags$div(
                           id = "landscapeCityMain",
@@ -235,23 +236,27 @@ ui <- fluidPage(includeCSS("www/css.css"),
                             id = "landscapeCityMap",
                             tags$div(
                               class = "landscape-placeholder",
-                              "CITY MAP"
+                              leaflet::leafletOutput(
+                                "landscape_city_map",
+                                width = "100%",
+                                height = "45vh"
+                              )
                             )
                           )
                         )
                       ),
                       
-                      
-
                       # INTERPRETATION bloc dedans on va retrouver les impacts et tout ..
                       tags$div(
                         class = "landscape-box",
                         id = "landscapeInterpretation",
                         tags$h4("Interpretation of observed landscape changes"),
-                        tags$div(
-                          class = "landscape-interpretation-placeholder",
-                          "IMPACTS / PRESSURES / DRIVERS"
-                        )
+                        # Liste des impacts disponibles
+                        uiOutput("landscape_city_impacts_ui"),
+                        
+                        # Arbre des causes de l'impact sélectionné
+                        uiOutput("landscape_city_tree_ui"),
+                        shiny::uiOutput("landscape_city_associations_ui")
                       )
                     )
                   ),

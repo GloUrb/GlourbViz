@@ -389,6 +389,28 @@
 }
 
 
+/*Local view*/
+.landscape-impacts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.landscape-impact-button {
+  white-space: normal;
+  text-align: left;
+  border-radius: 0.6rem;
+  padding: 0.7rem 1rem;
+}
+
+.landscape-tree-container {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+
                                     /* Onglet 4 */
 
 #leftSidebarAbout {

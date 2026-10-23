@@ -7,6 +7,7 @@ library(htmlwidgets)
 library(ggwordcloud)
 library(stats)
 library(bslib)
+library(visNetwork)
 
 source("R/functions.R")
 source("R/load_data.R")

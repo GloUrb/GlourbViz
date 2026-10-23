@@ -1021,31 +1021,26 @@ server <- function(input, output, session) {
   
   
   
-  # react pour l'onglet typo
+  # react pour l'onglet typo : choisir une zone et voir les villes concernées 
   landscape_typology_selected <- reactive({
-    
     req(input$landscape_global_category)
-    
     variable_name <- switch(
       input$landscape_global_variable,
       "impact" = "Impact",
       "pressure" = "Pressure",
       "driver" = "Driver"
     )
-    
     zone_name <- switch(
       input$landscape_global_zone,
       "tot" = "all",
       "cor" = "corridor",
       "pl" = "plain"
     )
-    
     data_typology <- landscape_impacts
     if (zone_name != "all") {
       data_typology <- data_typology |>
         dplyr::filter(zone == zone_name)
     }
-    
     # Séparer les catégories multiples
     data_categories <- data_typology |>
       dplyr::select(citycode, dplyr::all_of(variable_name)) |>
@@ -1058,7 +1053,6 @@ server <- function(input, output, session) {
           as.character(.data[[variable_name]])
         )
       )
-    
     city_status <- data_categories |>
       dplyr::group_by(citycode) |>
       dplyr::summarise(
@@ -1085,7 +1079,6 @@ server <- function(input, output, session) {
           TRUE ~ "No data"
         )
       )
-    
     # Conserver toutes les villes
     landscape_global |>
       dplyr::left_join(
@@ -1099,6 +1092,46 @@ server <- function(input, output, session) {
   
   
            ### Local View
+  
+  ## Render UI 
+
+#Permet d'afficher sur le website les impacts sous forme de boutons ...
+  output$landscape_city_impacts_ui <- renderUI({
+    impacts <- landscape_city_impacts()$Impact
+    if (length(impacts) == 0) {
+      return(tags$p("No impact data available for this selection."))
+    }
+    tags$div(
+      class = "landscape-impacts-list",
+      lapply(seq_along(impacts), function(i) {
+        actionButton(
+          inputId = paste0("landscape_impact_", i),
+          label = impacts[i],
+          class = "landscape-impact-button"
+        )
+      })
+    )
+  })
+  
+# L"emplacement de l'arbre dans l'app
+  output$landscape_city_tree_ui <- renderUI({
+    impact <- landscape_selected_impact()
+    if (is.null(impact)) {
+      return(NULL)
+    }
+    tags$div(
+      class = "landscape-tree-container",
+      tags$h4(impact),
+      visNetwork::visNetworkOutput(
+        "landscape_city_tree_graph",
+        width = "100%",
+        height = "45vh"
+      )
+    )
+  })
+  
+  
+  
 
   ## observe
   
@@ -1113,8 +1146,8 @@ server <- function(input, output, session) {
       inputId = "landscape_city_selected",
       choices = stats::setNames(
         villes$citycode,
-        villes$Urban.Aggl
-      )
+        villes$Urban.Aggl),
+        selected = "699745_20997"
     )
   })
   
@@ -1139,6 +1172,16 @@ server <- function(input, output, session) {
   })
   
   
+  # Réinitialiser la sélection si on change de ville ou de zone
+  observeEvent(
+    list(input$landscape_city_selected, input$landscape_zone_selected),
+    {
+      landscape_selected_impact(NULL)
+    },
+    ignoreInit = TRUE
+  ) 
+  
+  
   ## Reactive
   
 # On va filtrer la donnée selon les choix de l'utilisateur 
@@ -1152,11 +1195,226 @@ server <- function(input, output, session) {
         citycode == input$landscape_city_selected,
         zone == input$landscape_zone_selected
       )
+  })
+  
+#Va permettre de créer une couche ou les zones subdivisés --> fusion pour corridor/plain pour l'affichage
+  landscape_city_map_data <- reactive({
+    req(input$landscape_city_selected, input$landscape_zone_selected)
+    # Sélectionner les polygones
+    subdivisions <- zone |>
+      dplyr::filter(
+        CityCode == input$landscape_city_selected,
+        zone == input$landscape_zone_selected
+      )
+    if (nrow(subdivisions) == 0) {return(NULL)}
+    # Récupérer les coordonnées de la ville
+    coord_ville <- landscape_global |>
+      dplyr::filter(citycode == input$landscape_city_selected)
+    req(nrow(coord_ville) > 0)
+    lon <- coord_ville$Longitude[1]
+    lat <- coord_ville$Latitude[1]
+    req(is.finite(lon), is.finite(lat))
+    # Déterminer le fuseau UTM
+    fuseau <- max(1, min(60, floor((lon + 180) / 6) + 1))
+    epsg_utm <- if (lat >= 0) {
+      32600 + fuseau
+    } else {
+      32700 + fuseau
+    }
+    # Reprojeter et réparer les géométries
+    subdivisions_proj <- subdivisions |>
+      sf::st_transform(epsg_utm) |>
+      sf::st_make_valid()
+    # Fusionner pour obtenir le périmètre extérieur
+    perimetre_proj <- subdivisions_proj |>
+      sf::st_geometry() |>
+      sf::st_union()
+    # Revenir en WGS84
+    list(
+      subdivisions = sf::st_transform(subdivisions_proj, 4326),
+      perimetre = sf::st_transform(perimetre_proj, 4326)
+    )
+  }) 
+  
+  
+#ce code va servir à faire bouger le bloc d'interpretation   
+  landscape_city_impacts <- reactive({
+    req(input$landscape_city_selected, input$landscape_zone_selected)
+    landscape_impacts |>
+      dplyr::filter(
+        citycode == input$landscape_city_selected,
+        zone == input$landscape_zone_selected
+      ) |>
+      tidyr::separate_longer_delim(
+        cols = Impact,
+        delim = ","
+      ) |>
+      dplyr::mutate(
+        Impact = stringr::str_trim(Impact)
+      ) |>
+      dplyr::filter(
+        !is.na(Impact),
+        !tolower(Impact) %in% c("no_data", "null", "na", "")
+      ) |>
+      dplyr::distinct(Impact) |>
+      dplyr::arrange(Impact)
+  }) 
+  
+  
+#Récuperer l'impact sur lequel on a cliqué 
+  landscape_selected_impact <- reactiveVal(NULL)
+  observe({
+    impacts <- landscape_city_impacts()$Impact
+    lapply(seq_along(impacts), function(i) {
+      local({
+        index <- i
+        
+        observeEvent(input[[paste0("landscape_impact_", index)]], {
+          landscape_selected_impact(impacts[index])
+        }, ignoreInit = TRUE)
+        
+      })
+    })
+  })
+  
+  
+# Associations correspondant à l'impact sélectionné
+  landscape_city_associations <- reactive({
+    req(
+      input$landscape_city_selected,
+      input$landscape_zone_selected
+    )
+    impact <- landscape_selected_impact()
+    req(impact)
+    landscape_impacts |>
+      dplyr::mutate(
+        association_id = dplyr::row_number()
+      ) |>
+      dplyr::filter(
+        citycode == input$landscape_city_selected,
+        zone == input$landscape_zone_selected
+      ) |>
+      tidyr::separate_longer_delim(
+        Impact,
+        delim = ","
+      ) |>
+      dplyr::mutate(
+        Impact = stringr::str_trim(as.character(Impact))
+      ) |>
+      dplyr::filter(Impact == impact) |>
+      dplyr::select(
+        association_id,
+        Impact,
+        Pressure,
+        Driver,
+        change_spatiality
+      )
+  })
+  
+  
+# Recup l'association sélectionnée par l'utilisateur
+  landscape_selected_association <- reactiveVal(NULL)
+  # Réinitialiser la sélection quand les associations changent
+  observeEvent(landscape_city_associations(), {
+    landscape_selected_association(NULL)
+  })
+  # Afficher les associations de l'impact sélectionné
+  output$landscape_city_associations_ui <- renderUI({
+    donnees <- landscape_city_associations()
+    if (nrow(donnees) == 0) {
+      return(NULL)
+    }
+    choix <- stats::setNames(
+      as.character(donnees$association_id),
+      paste0(
+        "Association ", seq_len(nrow(donnees)),
+        " — ",
+        dplyr::coalesce(as.character(donnees$Pressure), "No pressure"),
+        " / ",
+        dplyr::coalesce(as.character(donnees$Driver), "No driver")
+      )
+    )
+    shiny::selectInput(
+      inputId = "landscape_association_selected",
+      label = "Select an association",
+      choices = c("Choose an association" = "", choix),
+      selected = ""
+    )
+  })
+  # Enregistrer l'association choisie
+  observeEvent(input$landscape_association_selected, {
+    id <- input$landscape_association_selected
+    if (is.null(id) || !nzchar(id)) {
+      landscape_selected_association(NULL)
+    } else {
+      landscape_selected_association(as.integer(id))
+    }
     
   })
   
   
-  ## Render plot 
+  
+# Va faire le lien-Relations --> Impact / Pressure / Driver de l'impact sélec
+  landscape_city_tree_data <- reactive({
+    req(input$landscape_city_selected,
+        input$landscape_zone_selected)
+    impact <- landscape_selected_impact()
+    req(impact)
+    # Lignes associées à l'impact sélectionné (+reactive plus haut)
+    donnees <- landscape_city_associations() |>
+      dplyr::mutate(
+        ligne_id = association_id
+      )
+    # Séparer les pressions
+    pressions <- donnees |>
+      dplyr::select(ligne_id, Pressure) |>
+      tidyr::separate_longer_delim(Pressure, delim = ",") |>
+      dplyr::mutate(
+        Pressure = stringr::str_trim(as.character(Pressure))
+      ) |>
+      dplyr::filter(
+        !is.na(Pressure),
+        !tolower(Pressure) %in% c("", "na", "null", "no_data")
+      )
+    # Séparer les drivers
+    drivers <- donnees |>
+      dplyr::select(ligne_id, Driver) |>
+      tidyr::separate_longer_delim(Driver, delim = ",") |>
+      dplyr::mutate(
+        Driver = stringr::str_trim(as.character(Driver))
+      ) |>
+      dplyr::filter(
+        !is.na(Driver),
+        !tolower(Driver) %in% c("", "na", "null", "no_data")
+      )
+    # Pressions et drivers appartenant à la même ligne
+    liens_pd <- pressions |>
+      dplyr::inner_join(
+        drivers,
+        by = "ligne_id",
+        relationship = "many-to-many"
+      ) |>
+      dplyr::distinct(Pressure, Driver)
+    # Drivers dont la ligne ne possède aucune pression
+    drivers_directs <- drivers |>
+      dplyr::anti_join(
+        pressions,
+        by = "ligne_id"
+      ) |>
+      dplyr::distinct(Driver)
+    list(
+      impact = impact,
+      pressions = unique(pressions$Pressure),
+      drivers = unique(drivers$Driver),
+      liens_pd = liens_pd,
+      drivers_directs = drivers_directs
+    )
+  })
+
+  
+  ## Render(s)
+  
+  #Render plot 
   
   #On appelle la fonction du plot pour créér le graphe
   output$landscape_pixel_graph <- renderPlot({
@@ -1171,10 +1429,299 @@ server <- function(input, output, session) {
   })
   
   
+  # render leaflet
   
+# sortie de la carte   
+  output$landscape_city_map <- leaflet::renderLeaflet({
+    req(input$landscape_city_selected)
+    coord_ville <- landscape_global |>
+      dplyr::filter(citycode == input$landscape_city_selected)
+    req(nrow(coord_ville) > 0)
+    lon <- coord_ville$Longitude[1]
+    lat <- coord_ville$Latitude[1]
+    req(is.finite(lon), is.finite(lat))
+    donnees <- landscape_city_map_data()
+    carte <- leaflet::leaflet() |>
+      leaflet::addTiles() |>
+      leaflet::setView(lng = lon, lat = lat, zoom = 10)
+    
+    if (is.null(donnees)) {
+      return(carte)
+    }
+    
+    # Carte de base
+    carte <- carte |>
+      leaflet::addPolygons(
+        data = donnees$subdivisions,
+        fill = FALSE,
+        color = "#64748b",
+        weight = 1.5,
+        group = "subdivisions"
+      ) |>
+      leaflet::addPolygons(
+        data = donnees$perimetre,
+        fill = FALSE,
+        color = "#FFD700",
+        weight = 4,
+        group = "perimetre"
+      )
+    
+    # Association actuellement sélectionnée
+    association_id <- landscape_selected_association()
+    if (is.null(association_id)) {
+      return(carte)
+    }
+    association <- landscape_city_associations() |>
+      dplyr::filter(association_id == !!association_id)
+    if (nrow(association) == 0) {
+      return(carte)
+    }
+    # Lire la spatialité de l'association
+    spatialite <- parse_landscape_spatiality(
+      association$change_spatiality[1]
+    )
+    
+    if (spatialite$statut == "no_change") {
+      carte <- carte |>
+        leaflet::addControl(
+          html = paste0(
+            "<div style='background:white; padding:10px 15px;",
+            "border-radius:6px; font-weight:bold;'>",
+            "No visible change",
+            "</div>"
+          ),
+          position = "topright"
+        )
+      return(carte)
+    }
+    
+    if (spatialite$statut != "change") {
+      return(carte)
+    }
+    
+    # Sélection de la géométrie
+    geometrie_changement <- if (spatialite$secteur == "all") {
+      donnees$perimetre
+    } else {
+      donnees$subdivisions |>
+        dplyr::filter(reach == spatialite$secteur)
+    }
+    
+    if (length(sf::st_geometry(geometrie_changement)) == 0) {
+      return(carte)
+    }
+    
+    styles <- spatialite$styles
+    
+    # FRAISE : contour épais continu
+    if ("local" %in% styles) {
+      carte <- carte |>
+        leaflet::addPolygons(
+          data = geometrie_changement,
+          fill = FALSE,
+          color = "#DB2777",
+          weight = 6,
+          group = "changement"
+        )
+    }
+    
+    # BANANE : contour pointillé
+    if ("reach" %in% styles) {
+      carte <- carte |>
+        leaflet::addPolygons(
+          data = geometrie_changement,
+          fill = FALSE,
+          color = "#DB2777",
+          weight = 3,
+          dashArray = "8,6",
+          group = "changement"
+        )
+    }
+    
+    # KIWI : couche qui recevra les hachures
+    if ("occasional" %in% styles) {
+      
+      carte <- carte |>
+        leaflet::addPolygons(
+          data = geometrie_changement,
+          fill = FALSE,
+          color = "#DB2777",
+          weight = if ("banane" %in% styles) 0 else 2,
+          layerId = "hachures_changement",
+          group = "changement"
+        )
+      
+      # On reprend ton JavaScript fonctionnel
+      carte <- htmlwidgets::onRender(
+        carte,
+        "
+      function(el, x) {
+
+        var map = this;
+
+        var pattern = new L.StripePattern({
+          weight: 2,
+          spaceWeight: 7,
+          color: '#DB2777',
+          opacity: 1,
+          angle: 45
+        });
+
+        pattern.addTo(map);
+
+        var layer = map.layerManager.getLayer(
+  'shape',
+  'hachures_changement'
+);
+
+if (layer) {
+  layer.setStyle({
+    fill: true,
+    fillOpacity: 1,
+    fillPattern: pattern
+  });
+}
+
+      }
+      "
+      )
+    }
+    
+    carte
+  })
+  
+  
+  # render arbre
+#ce code va contruire le graphique de l'arbre de liens
+  output$landscape_city_tree_graph <- visNetwork::renderVisNetwork({
+    donnees <- landscape_city_tree_data()
+    # Nœuds
+    # Nœuds
+    nodes <- data.frame(
+      id = paste0("I:", donnees$impact),
+      label = donnees$impact,
+      group = "Impact"
+    )
+    
+    if (length(donnees$pressions) > 0) {
+      nodes <- dplyr::bind_rows(
+        nodes,
+        data.frame(
+          id = paste0("P:", donnees$pressions),
+          label = donnees$pressions,
+          group = "Pressure"
+        )
+      )
+    }
+    
+    if (length(donnees$drivers) > 0) {
+      nodes <- dplyr::bind_rows(
+        nodes,
+        data.frame(
+          id = paste0("D:", donnees$drivers),
+          label = donnees$drivers,
+          group = "Driver"
+        )
+      )
+    }
+    
+    # Liens Impact -> Pressure
+    edges_ip <- data.frame(from = character(), to = character())
+    
+    if (length(donnees$pressions) > 0) {
+      edges_ip <- data.frame(
+        from = rep(paste0("I:", donnees$impact), length(donnees$pressions)),
+        to = paste0("P:", donnees$pressions)
+      )
+    }
+    
+    # Liens Pressure -> Driver
+    edges_pd <- donnees$liens_pd |>
+      dplyr::transmute(
+        from = paste0("P:", Pressure),
+        to = paste0("D:", Driver)
+      )
+    
+    # Liens directs Impact -> Driver
+    edges_id <- data.frame(from = character(), to = character())
+    
+    if (nrow(donnees$drivers_directs) > 0) {
+      edges_id <- donnees$drivers_directs |>
+        dplyr::transmute(
+          from = rep(paste0("I:", donnees$impact), dplyr::n()),
+          to = paste0("D:", Driver)
+        )
+    }
+    
+    # Tous les liens
+    edges <- dplyr::bind_rows(edges_ip, edges_pd, edges_id) |>
+      dplyr::distinct()
+    visNetwork::visNetwork(
+      nodes,
+      edges,
+      width = "100%",
+      height = "45vh"
+    ) |>
+      visNetwork::visNodes(
+        shape = "box",
+        margin = 12,
+        font = list(size = 16)
+      ) |>
+      visNetwork::visGroups(
+        groupname = "Impact",
+        color = list(background = "#dbeafe", border = "#60a5fa")
+      ) |>
+      visNetwork::visGroups(
+        groupname = "Pressure",
+        color = list(background = "#fef3c7", border = "#d97706")
+      ) |>
+      visNetwork::visGroups(
+        groupname = "Driver",
+        color = list(background = "#f3e8ff", border = "#a78bfa")
+      ) |>
+      visNetwork::visEdges(
+        arrows = "",
+        color = list(color = "#94a3b8")
+      ) |>
+      visNetwork::visHierarchicalLayout(
+        direction = "UD",
+        levelSeparation = 130,
+        nodeSpacing = 180,
+        sortMethod = "directed"
+      ) |>
+      visNetwork::visInteraction(
+        dragNodes = FALSE,
+        dragView = FALSE,
+        zoomView = FALSE
+      )
+  })
+  
+  observe({
+    req(landscape_city_associations())
+    
+    print(landscape_city_associations())
+  })
   
   
   ### Fin de l'onglet landscapes
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   #  --------------------------------------------- onglet autre
   
