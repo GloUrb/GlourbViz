@@ -168,21 +168,6 @@
   min-height: 70vh;
 }
 
-
-/* TEMPORAIRE : juste pour visualiser la future carte */
-
-.landscape-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 0.08rem dashed #bdbdbd;
-  border-radius: 0.4rem;
-
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
 /* ================================
    LANDSCAPES - CITY VIEW
    ================================ */
@@ -409,6 +394,171 @@
   padding-top: 1rem;
   border-top: 1px solid #ddd;
 }
+
+
+    /* legende pour la carte de view local */
+
+.landscape-map-legend {
+  background: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.landscape-legend-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.landscape-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.landscape-legend-item span {
+  display: inline-block;
+  width: 30px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.legend-line-yellow {
+  border: 3px solid #FFD700;
+}
+
+.legend-line-grey {
+  border-top: 2px solid #64748b;
+  margin-top: 11px;
+}
+
+.legend-line-pink {
+  border: 3px solid #DB2777;
+}
+
+.legend-line-dashed {
+  border: 3px dashed #DB2777;
+}
+
+.legend-hatched {
+  border: 1px solid #DB2777;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 4px,
+    #DB2777 4px,
+    #DB2777 6px
+  );
+}
+
+/*le (i)*/
+
+/* Positionnement du bouton dans la légende */
+.landscape-map-legend {
+  position: relative;
+}
+
+/* Petit bouton d'information */
+.landscape-legend-info {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1;
+  z-index: 2;
+}
+
+/* Fenêtre explicative */
+.landscape-legend-popup {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  width: min(280px, 75vw);
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+.landscape-legend-popup.is-visible {
+  display: block;
+}
+
+.landscape-legend-popup p {
+  margin: 8px 0 0;
+}
+
+
+    /* Legende du graph (impact-pressure-driver)*/
+
+/* Conteneur du graphique */
+.landscape-tree-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Légende du graphique */
+.landscape-tree-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10;
+
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.landscape-tree-legend strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.landscape-tree-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.landscape-tree-legend-item span {
+  display: inline-block;
+  width: 30px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+/* Couleurs identiques aux nœuds visNetwork */
+.legend-impact {
+  background: #dbeafe;
+  border: 2px solid #60a5fa;
+}
+
+.legend-pressure {
+  background: #fef3c7;
+  border: 2px solid #d97706;
+}
+
+.legend-driver {
+  background: #f3e8ff;
+  border: 2px solid #a78bfa;
+}
+
 
 
                                     /* Onglet 4 */

@@ -1,4 +1,4 @@
-
+##### FONCTIONS
 
 
     # Onglet indicator
@@ -154,5 +154,66 @@ parse_landscape_spatiality <- function(x) {
     styles = styles,
     secteur = secteurs,
     statut = "change"
+  )
+}
+
+
+#Legende pour la carte dans la view locl
+landscape_map_legend <- function(show_spatiality = FALSE) {
+  
+  htmltools::tags$div(
+    class = "landscape-map-legend",
+    # htmltools::tags$div(
+    #   class = "landscape-legend-title",
+    #   "Map legend"
+    # ),
+          # petit (i)
+    htmltools::tags$span(
+      class = "landscape-legend-info",
+      title = "About the map legend",
+      onclick = "event.stopPropagation(); this.nextElementSibling.classList.toggle('is-visible');",
+      "\u24D8"
+    ),
+    htmltools::tags$div(
+      class = "landscape-legend-popup",
+      htmltools::tags$strong("Understanding spatiality"),
+      htmltools::tags$p("Local : The change is observed only in the study area"),
+      htmltools::tags$p("Extended : The change is observed beyond of the study area. Sometimes, all the lenght of the corridor "),
+      htmltools::tags$p("Scattered : The change is observed that scaterred maners in the study area"),
+      htmltools::tags$p("Reach boundaries : Represents the boundaries of the downstream, urban, and upstream sections."),
+      htmltools::tags$p("Sometimes, we have multiple spatialities for a single area")
+    ),
+    
+    #Sometimes, we have multiple spatialities for a single area
+          #fin petit (i)
+    htmltools::tags$div(
+      class = "landscape-legend-item",
+      htmltools::tags$span(class = "legend-line-yellow"),
+      "Study area"
+    ),
+    htmltools::tags$div(
+      class = "landscape-legend-item",
+      htmltools::tags$span(class = "legend-line-grey"),
+      "Reach boundaries"
+    ),
+    if (show_spatiality) {
+      htmltools::tagList(
+        htmltools::tags$div(
+          class = "landscape-legend-item",
+          htmltools::tags$span(class = "legend-line-pink"),
+          "Local change"
+        ),
+        htmltools::tags$div(
+          class = "landscape-legend-item",
+          htmltools::tags$span(class = "legend-line-dashed"),
+          "Extended change"
+        ),
+        htmltools::tags$div(
+          class = "landscape-legend-item",
+          htmltools::tags$span(class = "legend-hatched"),
+          "Scattered change"
+        )
+      )
+    }
   )
 }

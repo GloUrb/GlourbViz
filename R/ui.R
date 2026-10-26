@@ -234,13 +234,10 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           tags$div(
                             class = "landscape-map-box",
                             id = "landscapeCityMap",
-                            tags$div(
-                              class = "landscape-placeholder",
                               leaflet::leafletOutput(
                                 "landscape_city_map",
                                 width = "100%",
-                                height = "45vh"
-                              )
+                                height = "50vh"
                             )
                           )
                         )

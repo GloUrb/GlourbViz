@@ -2,8 +2,8 @@
 
 # landscape
 
-zone <- sf::st_read(
-  "data/landscapes/study_area_reach_zone/study_area_reach_zone.shp"
+zone <- readRDS(
+  "data/landscapes/glourbviz_landscape_zone.rds"
 )
 
 landscape_global <- readRDS(

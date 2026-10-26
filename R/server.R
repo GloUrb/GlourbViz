@@ -1113,19 +1113,44 @@ server <- function(input, output, session) {
     )
   })
   
+  
 # L"emplacement de l'arbre dans l'app
   output$landscape_city_tree_ui <- renderUI({
     impact <- landscape_selected_impact()
     if (is.null(impact)) {
       return(NULL)
     }
+    #
     tags$div(
       class = "landscape-tree-container",
       tags$h4(impact),
-      visNetwork::visNetworkOutput(
-        "landscape_city_tree_graph",
-        width = "100%",
-        height = "45vh"
+      tags$div(
+        class = "landscape-tree-wrapper",
+        visNetwork::visNetworkOutput(
+          "landscape_city_tree_graph",
+          width = "100%",
+          height = "45vh"
+        ),
+        # Légende intégrée au graphique
+        tags$div(
+          class = "landscape-tree-legend",
+          tags$strong("Impact–Pressure–Driver framework"),
+          tags$div(
+            class = "landscape-tree-legend-item",
+            tags$span(class = "legend-impact"),
+            "Impact"
+          ),
+          tags$div(
+            class = "landscape-tree-legend-item",
+            tags$span(class = "legend-pressure"),
+            "Pressure"
+          ),
+          tags$div(
+            class = "landscape-tree-legend-item",
+            tags$span(class = "legend-driver"),
+            "Driver"
+          )
+        )
       )
     )
   })
@@ -1177,6 +1202,7 @@ server <- function(input, output, session) {
     list(input$landscape_city_selected, input$landscape_zone_selected),
     {
       landscape_selected_impact(NULL)
+      landscape_selected_association(NULL)
     },
     ignoreInit = TRUE
   ) 
@@ -1336,7 +1362,7 @@ server <- function(input, output, session) {
     )
     shiny::selectInput(
       inputId = "landscape_association_selected",
-      label = "Select an association",
+      label = "Select an association to see where this spatial change occurs",
       choices = c("Choose an association" = "", choix),
       selected = ""
     )
@@ -1448,14 +1474,16 @@ server <- function(input, output, session) {
     if (is.null(donnees)) {
       return(carte)
     }
-    
     # Carte de base
     carte <- carte |>
       leaflet::addPolygons(
         data = donnees$subdivisions,
-        fill = FALSE,
+        fill = TRUE,
+        fillColor = "#FFFFFF",
+        fillOpacity = 0.01,
         color = "#64748b",
         weight = 1.5,
+        label = ~reach,
         group = "subdivisions"
       ) |>
       leaflet::addPolygons(
@@ -1464,7 +1492,13 @@ server <- function(input, output, session) {
         color = "#FFD700",
         weight = 4,
         group = "perimetre"
-      )
+      ) |>
+      #Premiere legende 
+    leaflet::addControl(
+      html = landscape_map_legend(show_spatiality = FALSE),
+      position = "bottomright",
+      layerId = "landscape_legend"
+    )
     
     # Association actuellement sélectionnée
     association_id <- landscape_selected_association()
@@ -1480,7 +1514,6 @@ server <- function(input, output, session) {
     spatialite <- parse_landscape_spatiality(
       association$change_spatiality[1]
     )
-    
     if (spatialite$statut == "no_change") {
       carte <- carte |>
         leaflet::addControl(
@@ -1494,11 +1527,17 @@ server <- function(input, output, session) {
         )
       return(carte)
     }
-    
     if (spatialite$statut != "change") {
       return(carte)
     }
-    
+      # Actualiser la légende pour afficher les spatialités cette fois
+    carte <- carte |>
+      leaflet::removeControl("landscape_legend") |>
+      leaflet::addControl(
+        html = landscape_map_legend(show_spatiality = TRUE),
+        position = "bottomright",
+        layerId = "landscape_legend"
+      )
     # Sélection de la géométrie
     geometrie_changement <- if (spatialite$secteur == "all") {
       donnees$perimetre
@@ -1510,10 +1549,8 @@ server <- function(input, output, session) {
     if (length(sf::st_geometry(geometrie_changement)) == 0) {
       return(carte)
     }
-    
     styles <- spatialite$styles
-    
-    # FRAISE : contour épais continu
+      # FRAISE : contour épais continu
     if ("local" %in% styles) {
       carte <- carte |>
         leaflet::addPolygons(
@@ -1524,8 +1561,7 @@ server <- function(input, output, session) {
           group = "changement"
         )
     }
-    
-    # BANANE : contour pointillé
+      # BANANE : contour pointillé
     if ("reach" %in% styles) {
       carte <- carte |>
         leaflet::addPolygons(
@@ -1537,10 +1573,8 @@ server <- function(input, output, session) {
           group = "changement"
         )
     }
-    
-    # KIWI : couche qui recevra les hachures
+      # KIWI : couche qui recevra les hachures
     if ("occasional" %in% styles) {
-      
       carte <- carte |>
         leaflet::addPolygons(
           data = geometrie_changement,
@@ -1550,15 +1584,12 @@ server <- function(input, output, session) {
           layerId = "hachures_changement",
           group = "changement"
         )
-      
       # On reprend ton JavaScript fonctionnel
       carte <- htmlwidgets::onRender(
         carte,
         "
       function(el, x) {
-
         var map = this;
-
         var pattern = new L.StripePattern({
           weight: 2,
           spaceWeight: 7,
@@ -1566,14 +1597,11 @@ server <- function(input, output, session) {
           opacity: 1,
           angle: 45
         });
-
         pattern.addTo(map);
-
         var layer = map.layerManager.getLayer(
   'shape',
   'hachures_changement'
 );
-
 if (layer) {
   layer.setStyle({
     fill: true,
@@ -1581,12 +1609,10 @@ if (layer) {
     fillPattern: pattern
   });
 }
-
       }
       "
       )
     }
-    
     carte
   })
   
@@ -1595,7 +1621,6 @@ if (layer) {
 #ce code va contruire le graphique de l'arbre de liens
   output$landscape_city_tree_graph <- visNetwork::renderVisNetwork({
     donnees <- landscape_city_tree_data()
-    # Nœuds
     # Nœuds
     nodes <- data.frame(
       id = paste0("I:", donnees$impact),
@@ -1627,21 +1652,18 @@ if (layer) {
     
     # Liens Impact -> Pressure
     edges_ip <- data.frame(from = character(), to = character())
-    
     if (length(donnees$pressions) > 0) {
       edges_ip <- data.frame(
         from = rep(paste0("I:", donnees$impact), length(donnees$pressions)),
         to = paste0("P:", donnees$pressions)
       )
     }
-    
     # Liens Pressure -> Driver
     edges_pd <- donnees$liens_pd |>
       dplyr::transmute(
         from = paste0("P:", Pressure),
         to = paste0("D:", Driver)
       )
-    
     # Liens directs Impact -> Driver
     edges_id <- data.frame(from = character(), to = character())
     
@@ -1683,7 +1705,7 @@ if (layer) {
         arrows = "",
         color = list(color = "#94a3b8")
       ) |>
-      visNetwork::visHierarchicalLayout(
+      visNetwork::visHierarchicalLayout( #changement d'orient du graph
         direction = "UD",
         levelSeparation = 130,
         nodeSpacing = 180,
@@ -1698,7 +1720,6 @@ if (layer) {
   
   observe({
     req(landscape_city_associations())
-    
     print(landscape_city_associations())
   })
   
