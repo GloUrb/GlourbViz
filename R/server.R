@@ -1125,16 +1125,38 @@ server <- function(input, output, session) {
       class = "landscape-tree-container",
       tags$h4(impact),
       tags$div(
+        class = "landscape-tree-layout",
+        # Panneau à gauche, uniquement si un nœud est sélectionné
+        tags$div(
+          class = "landscape-tree-info-wrapper",
+          uiOutput("landscape_city_node_info_ui")
+        ),
+      tags$div(
         class = "landscape-tree-wrapper",
         visNetwork::visNetworkOutput(
           "landscape_city_tree_graph",
           width = "100%",
           height = "45vh"
         ),
-        # Légende intégrée au graphique
+        # Légende (+petit (i) à coté du titre)
         tags$div(
           class = "landscape-tree-legend",
           tags$strong("Impact–Pressure–Driver framework"),
+          #le petit (i)
+          tags$span(
+            class = "landscape-legend-info",
+            title = "About the Impact–Pressure–Driver framework",
+            onclick = "event.stopPropagation(); this.nextElementSibling.classList.toggle('is-visible');",
+            "\u24D8"
+          ),
+          tags$div(
+            class = "landscape-legend-popup",
+            tags$strong("Understanding the IPD framework"),
+            tags$p("Impact: ****."),
+            tags$p("Pressure: ****"),
+            tags$p("Driver: *****")
+          ),
+          #fin petit (i)
           tags$div(
             class = "landscape-tree-legend-item",
             tags$span(class = "legend-impact"),
@@ -1149,9 +1171,29 @@ server <- function(input, output, session) {
             class = "landscape-tree-legend-item",
             tags$span(class = "legend-driver"),
             "Driver"
+            )
           )
         )
       )
+    )
+  })
+  
+  
+#Créer le panneau explicatif --> affichera le type, le nom et la définition du nœud sélectionné.
+  output$landscape_city_node_info_ui <- renderUI({
+    node_id <- landscape_selected_node()
+    if (is.null(node_id)) {
+      return(NULL)
+    }    
+    info <- landscape_city_node_info()
+    tags$div(
+      class = "landscape-city-node-info",
+      tags$span(
+        class = "landscape-city-node-type",
+        info$type
+      ),
+      tags$h4(info$nom),
+      tags$p(info$definition)
     )
   })
   
@@ -1203,6 +1245,7 @@ server <- function(input, output, session) {
     {
       landscape_selected_impact(NULL)
       landscape_selected_association(NULL)
+      landscape_selected_node(NULL)
     },
     ignoreInit = TRUE
   ) 
@@ -1247,14 +1290,16 @@ server <- function(input, output, session) {
     } else {
       32700 + fuseau
     }
-    # Reprojeter et réparer les géométries
+    # Reproj et réparer les géométries
     subdivisions_proj <- subdivisions |>
       sf::st_transform(epsg_utm) |>
-      sf::st_make_valid()
+      sf::st_make_valid() |>
+      sf::st_collection_extract("POLYGON")
     # Fusionner pour obtenir le périmètre extérieur
     perimetre_proj <- subdivisions_proj |>
       sf::st_geometry() |>
-      sf::st_union()
+      sf::st_union() |>
+      sf::st_collection_extract("POLYGON")
     # Revenir en WGS84
     list(
       subdivisions = sf::st_transform(subdivisions_proj, 4326),
@@ -1337,6 +1382,18 @@ server <- function(input, output, session) {
       )
   })
   
+#créer une variable réactive dédiée au nœud (pour le blox d'info sur les pression/driver/impact)
+  landscape_selected_node <- reactiveVal(NULL)
+  
+#observateur pour les clics sur l'arbre (bloc d'info à coté)
+  observeEvent(input$landscape_city_selected_node, {
+    landscape_selected_node(input$landscape_city_selected_node)
+  })
+  
+#observateur pour impact quand on change de contexte il se mettra à jour
+  observeEvent(landscape_selected_impact(), {
+    landscape_selected_node(NULL)
+  }, ignoreInit = TRUE)
   
 # Recup l'association sélectionnée par l'utilisateur
   landscape_selected_association <- reactiveVal(NULL)
@@ -1362,11 +1419,13 @@ server <- function(input, output, session) {
     )
     shiny::selectInput(
       inputId = "landscape_association_selected",
-      label = "Select an association to see where this spatial change occurs",
+      label = "Select an association to see where this spatial change occurs (in the map)",
       choices = c("Choose an association" = "", choix),
       selected = ""
     )
   })
+  
+  
   # Enregistrer l'association choisie
   observeEvent(input$landscape_association_selected, {
     id <- input$landscape_association_selected
@@ -1375,7 +1434,6 @@ server <- function(input, output, session) {
     } else {
       landscape_selected_association(as.integer(id))
     }
-    
   })
   
   
@@ -1436,6 +1494,45 @@ server <- function(input, output, session) {
       drivers_directs = drivers_directs
     )
   })
+  
+  
+# Définition du noeud ou de (L'impact/la pression/ le driver) sélectionné dans l'arbre City View
+  landscape_city_node_info <- reactive({
+    node_id <- landscape_selected_node()
+    req(node_id)
+    # Identifier la catégorie du nœud
+    type <- switch(
+      substr(node_id, 1, 2),
+      "I:" = "Impact",
+      "P:" = "Pressure",
+      "D:" = "Driver"
+    )
+    # Récupérer le nom sans le préfixe I:, P: ou D:
+    selected <- substring(node_id, 3)
+    # Même méthode de recherche que dans Global View
+    matches <- infos |>
+      dplyr::filter(
+        !is.na(NomVar),
+        !is.na(Def),
+        trimws(Def) != "",
+        selected == NomVar |
+          startsWith(selected, paste0(NomVar, "_"))
+      ) |>
+      dplyr::mutate(longueur = nchar(NomVar)) |>
+      dplyr::arrange(dplyr::desc(longueur))
+    definition <- if (nrow(matches) > 0) {
+      matches$Def[1]
+    } else {
+      "No definition available for this node."
+    }
+    list(
+      type = type,
+      nom = selected,
+      definition = definition
+    )
+  })
+  
+
 
   
   ## Render(s)
@@ -1550,7 +1647,7 @@ server <- function(input, output, session) {
       return(carte)
     }
     styles <- spatialite$styles
-      # FRAISE : contour épais continu
+      # local : contour épais continu
     if ("local" %in% styles) {
       carte <- carte |>
         leaflet::addPolygons(
@@ -1561,7 +1658,7 @@ server <- function(input, output, session) {
           group = "changement"
         )
     }
-      # BANANE : contour pointillé
+      # reach : contour pointillé
     if ("reach" %in% styles) {
       carte <- carte |>
         leaflet::addPolygons(
@@ -1573,14 +1670,14 @@ server <- function(input, output, session) {
           group = "changement"
         )
     }
-      # KIWI : couche qui recevra les hachures
+      # occas,epars : couche qui recevra les hachures
     if ("occasional" %in% styles) {
       carte <- carte |>
         leaflet::addPolygons(
           data = geometrie_changement,
           fill = FALSE,
           color = "#DB2777",
-          weight = if ("banane" %in% styles) 0 else 2,
+          weight = if ("reach" %in% styles) 0 else 2,
           layerId = "hachures_changement",
           group = "changement"
         )
@@ -1715,7 +1812,29 @@ if (layer) {
         dragNodes = FALSE,
         dragView = FALSE,
         zoomView = FALSE
-      )
+      )|>
+      visNetwork::visEvents(
+        selectNode = "
+      function(params) {
+        Shiny.setInputValue(
+          'landscape_city_selected_node',
+          params.nodes[0],
+          {priority: 'event'}
+        );
+      }
+    ",
+        deselectNode = "
+      function(params) {
+        Shiny.setInputValue(
+          'landscape_city_selected_node',
+          null,
+          {priority: 'event'}
+        );
+      }
+    "
+  )
+    
+    
   })
   
   observe({

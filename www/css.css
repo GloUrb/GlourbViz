@@ -479,14 +479,14 @@
   position: absolute;
   bottom: 100%;
   right: 0;
-  width: min(280px, 75vw);
+  width: min(450px, 85vw);
   padding: 12px;
   margin-bottom: 8px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: normal;
   line-height: 1.5;
 }
@@ -500,7 +500,7 @@
 }
 
 
-    /* Legende du graph (impact-pressure-driver)*/
+      /* Legende du graph (impact-pressure-driver) + petit bouton (i) en bas*/
 
 /* Conteneur du graphique */
 .landscape-tree-wrapper {
@@ -508,20 +508,18 @@
   width: 100%;
 }
 
-/* Légende du graphique */
 .landscape-tree-legend {
   position: absolute;
-  bottom: 12px;
+  top: 12px;
   right: 12px;
   z-index: 10;
-
   background: white;
   padding: 10px 14px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-
   font-size: 12px;
-  pointer-events: none;
+  pointer-events: auto;
+  padding-right: 30px; /*reserve place à côté du titre */
 }
 
 .landscape-tree-legend strong {
@@ -559,7 +557,90 @@
   border: 2px solid #a78bfa;
 }
 
+/*le petit (i)*/
 
+/* Position du (i) dans la légende de l'arbre */
+.landscape-tree-legend .landscape-legend-info {
+  top: 10px;
+  right: 8px;
+}
+
+/* Fenêtre explicative de l'arbre */
+.landscape-tree-legend .landscape-legend-popup {
+  right: 0;
+  width: min(450px, 85vw);
+}
+
+/*le titre du bloc (i)*/
+.landscape-tree-legend .landscape-legend-popup strong {
+  margin-bottom: 4px;
+}
+
+
+
+/*le bloc d'info qui apparait à côté de l'arbre graphique*/
+
+/* Disposition du panneau d'information et du graphique */
+.landscape-tree-layout {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Espace réservé au panneau d'information */
+.landscape-tree-info-wrapper {
+  width: 280px;
+  flex: 0 0 280px;
+  min-width: 0;
+}
+
+/* Graphique */
+.landscape-tree-layout .landscape-tree-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Panneau de définition */
+.landscape-city-node-info {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Type de nœud */
+.landscape-city-node-type {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Nom du nœud */
+.landscape-city-node-info h4 {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+/* Définition */
+.landscape-city-node-info p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .landscape-tree-layout {
+    flex-direction: column;
+  }
+
+  .landscape-city-node-info {
+    width: 100%;
+  }
+}
 
                                     /* Onglet 4 */
 

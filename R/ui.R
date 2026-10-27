@@ -174,7 +174,14 @@ ui <- fluidPage(includeCSS("www/css.css"),
                             class = "landscape-box",
                             id = "landscapeCityInfo",
                             tags$h4("Information"),
-                            tags$p("Select an element to display more information.")
+                            tags$p("This tab is about changes in landscapes in corridors and floodplains in a context of generalized urbanization.",
+                                   style = "text-align: justify;"),
+                            tags$p("Most rivers now flow through urban areas (Paul et Meyer, 2008), putting considerable pressure on river systems, though the overall impact is not well known.
+                                  \n This study aims to  describe, quantify, understand and compare these changes. 
+                                   \n the hypothesis to be tested is that characteristics specific to urban and river systems control landscape evolution.
+                                   \n Using an existing database showing changes in water surfaces, this study analyzes the role of urbanization in modifying the river patterns in the vicinity of 300 urban areas worldwide.",
+                                   style = "text-align: justify;"
+                                   )
                           ),
                           
                           tags$div(

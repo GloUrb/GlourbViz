@@ -158,6 +158,7 @@ parse_landscape_spatiality <- function(x) {
 }
 
 
+
 #Legende pour la carte dans la view locl
 landscape_map_legend <- function(show_spatiality = FALSE) {
   
