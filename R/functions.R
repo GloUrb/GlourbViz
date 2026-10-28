@@ -77,7 +77,7 @@ plot_landscape_pixel <- function(data) {
       values = c(
         "Positive" = "#56a88d",
         "Negative" = "#dc6b6b",
-        "Neutral" = "#a3a3a3"
+        "Neutral" = "#616161"
       )
     ) +
       ggplot2::scale_y_continuous(
@@ -159,9 +159,8 @@ parse_landscape_spatiality <- function(x) {
 
 
 
-#Legende pour la carte dans la view locl
+#Legende pour la carte dans la view locl et petit (i)
 landscape_map_legend <- function(show_spatiality = FALSE) {
-  
   htmltools::tags$div(
     class = "landscape-map-legend",
     # htmltools::tags$div(
@@ -172,7 +171,7 @@ landscape_map_legend <- function(show_spatiality = FALSE) {
     htmltools::tags$span(
       class = "landscape-legend-info",
       title = "About the map legend",
-      onclick = "event.stopPropagation(); this.nextElementSibling.classList.toggle('is-visible');",
+      onclick = "toggleLandscapeInfo(event, this);",
       "\u24D8"
     ),
     htmltools::tags$div(

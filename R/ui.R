@@ -2,14 +2,20 @@
 
 ui <- fluidPage(includeCSS("www/css.css"),
                 tags$head(
-                  tags$script(src = "js/leaflet.pattern.js")),
+                  tags$script(src = "js/leaflet.pattern.js"),
+                  tags$script(src = "js/landscape_bt_info.js")),
                 shinyjs::useShinyjs(),
                 navbarPage(
-                  title = div("GloUrbViz"),
+                  title = div(
+                    tags$image(
+                      src="image/logo2.png",
+                      alt = "GloUrbViz",
+                      class = "glourb-logo"
+                    )
+                  ),
                   windowTitle = "GloUrbViz",
                   id = "nav",
-                  
-                  
+            
                   ########################### ONGLET indicator  ###################################
                   tabPanel(
                     "Indicator",
@@ -179,7 +185,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                             tags$p("Most rivers now flow through urban areas (Paul et Meyer, 2008), putting considerable pressure on river systems, though the overall impact is not well known.
                                   \n This study aims to  describe, quantify, understand and compare these changes. 
                                    \n the hypothesis to be tested is that characteristics specific to urban and river systems control landscape evolution.
-                                   \n Using an existing database showing changes in water surfaces, this study analyzes the role of urbanization in modifying the river patterns in the vicinity of 300 urban areas worldwide.",
+                                   \n Using an existing database showing changes in water surfaces, this study analyzes the role of urbanization in modifying the river patterns in the vicinity of 300 urban areas worldwide. (F.Bourgeau et al, 2025)",
                                    style = "text-align: justify;"
                                    )
                           ),
@@ -201,7 +207,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                                 "Corridor" = "corridor",
                                 "Plain" = "plain"
                               ),
-                              selected = "corridor" # defaut
+                              selected = "plain" # defaut
                             )
                           ),
                           
@@ -210,7 +216,11 @@ ui <- fluidPage(includeCSS("www/css.css"),
                             id = "landscapeDataQuality",
                             tags$h4("Data quality"),
                             tags$p(
-                              "Methodological information about the interpretation of landscape changes."
+                              "The methodology used in this study to explain the changes draws on the DPSIR framework (Driving forces, Pressures, State, Impacts, Responses).
+                              The objective is to identify and explain the impacts, pressures and driving forces.
+                              To this end, observations and interpretations of satellite imagery were carried out over several years, using the Google Earth Timelapse tool (a global, zoomable video that shows how the Earth has changed since 1984).
+                              Based on these observations, and in connection with a review of grey literature, the aim was to identify spatial recurrences that could explain the observed changes.",
+                              style = "text-align: justify;"
                             )
                           )
                         ),
@@ -244,7 +254,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                               leaflet::leafletOutput(
                                 "landscape_city_map",
                                 width = "100%",
-                                height = "50vh"
+                                height = "66vh"
                             )
                           )
                         )
@@ -300,8 +310,8 @@ ui <- fluidPage(includeCSS("www/css.css"),
                                tags$h2("À propos de GloUrbView", style = "color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px;"),
                                tags$p(
                                  "GloUrbView est une application développée pour analyser les dynamiques des paysages urbains et fluviaux.
-        Elle permet de visualiser les indicateurs clés (biodiversité, économie, etc.) et d'étudier les impacts,
-        pressions et facteurs de changement."
+                                 Elle permet de visualiser les indicateurs clés (biodiversité, économie, etc.) et d'étudier les impacts,
+                                 pressions et facteurs de changement."
                                ),
                                tags$p(
                                  "Cette application s'adresse à tous types de publics."

@@ -1,5 +1,26 @@
-                          /* Onglet indicator */
+                                        /* L'app */           
+                          
+                          
+/* l'image du tout debut */
 
+/* Taille Logo dans la navbarrr */
+.glourb-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+/*centrer le logo dans la navbar*/
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+                                      /* Onglet indicator */
+                                      
 /* Organisation générale essayer de respecter --> 
    -> 1/4 de l'espace pour la sidebar
    -> 3/4 pour la carte et les informations */
@@ -505,7 +526,8 @@
 /* Conteneur du graphique */
 .landscape-tree-wrapper {
   position: relative;
-  width: 100%;
+  width: 100% ;
+  z-index: 1001;
 }
 
 .landscape-tree-legend {

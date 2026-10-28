@@ -1146,15 +1146,31 @@ server <- function(input, output, session) {
           tags$span(
             class = "landscape-legend-info",
             title = "About the Impact–Pressure–Driver framework",
-            onclick = "event.stopPropagation(); this.nextElementSibling.classList.toggle('is-visible');",
+            onclick = "toggleLandscapeInfo(event, this);",
             "\u24D8"
           ),
           tags$div(
             class = "landscape-legend-popup",
-            tags$strong("Understanding the IPD framework"),
-            tags$p("Impact: ****."),
-            tags$p("Pressure: ****"),
-            tags$p("Driver: *****")
+            tags$strong("Definition"),
+            tags$p(tags$strong("Impact :"),"An observed consequence of environmental changes
+                   affecting the structure, functioning or ecological
+                   conditions of river landscapes."),
+            tags$p(tags$strong("Pressure :"),"A direct influence or stress exerted on a river system
+                   by natural processes or human activities, contributing
+                   to changes in its physical and ecological characteristics."),
+            tags$p(tags$strong("Driver :"),"An underlying natural or human-related factor that
+                   drives changes in river systems, influencing the pressures exerted on river landscapes."),
+            tags$p(""),
+            tags$strong("Understanding the DPSIR methodology"),
+            tags$p("A structured tool used to analyse complex environmental issues and understand the causal relationships
+                   between human activities and environmental impacts. It helps simplify qualitative observations,
+                   characterise changes, and interpret them.
+                   Unlike the conventional application of the DPSIR framework, this study deliberately adopts a backward approach:
+                   it starts from the observed environmental impact, traces back to the pressures that caused it,
+                   and then identifies the underlying driving forces (human activities and dynamics) responsible for these pressures.
+                   This approach helps trace the causes of observed environmental changes and understand their underlying mechanisms.", 
+                   style = "text-align: justify;")
+            
           ),
           #fin petit (i)
           tags$div(
@@ -1214,7 +1230,7 @@ server <- function(input, output, session) {
       choices = stats::setNames(
         villes$citycode,
         villes$Urban.Aggl),
-        selected = "699745_20997"
+        selected = "1481922_23014"
     )
   })
   
@@ -1222,7 +1238,7 @@ server <- function(input, output, session) {
   observeEvent(input$landscape_classification_info, {
     showModal(
       modalDialog(
-        title = "Classification legend",
+        title = "Information about classification and dataset",
         tags$p(
           "Each letter below the bars represents a class of riverscape change."
         ),
@@ -1232,6 +1248,12 @@ server <- function(input, output, session) {
         tags$p(tags$strong("D — "), "Minor increase and minor decrease"),
         tags$p(tags$strong("E — "), "Minor increase and medium decrease"),
         tags$p(tags$strong("F — "), "Minor increase and major decrease"),
+        tags$p("The dataset comes from the Global Surface Water Explorer website. The Water Occurrence Change
+               Intensity product tracks changes in surface water occurrence between 1984 and 2024. Each pixel
+               represents the direction (increase, decrease or no change) and intensity of these changes.
+               The graph shows the percentage of pixels in each section (upstream, city and downstream) for each city,
+               distinguishing between the plain and the corridor.",
+               style = "text-align: justify;"),
         easyClose = TRUE,
         footer = modalButton("Close")
       )
