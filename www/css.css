@@ -131,6 +131,15 @@
   margin: 0.8rem 1rem;
 }
 
+/* Barre supérieure de Landscape Changes */
+.landscape-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-right: 1rem;
+}
+
 .landscape-view-btn {
   background: white;
   border: 0.1rem solid transparent;
@@ -140,6 +149,16 @@
 .landscape-view-btn.active {
   border: 0.12rem solid #333;
   font-weight: 600;
+}
+
+/* Bouton d'information à l'extrémité droite (mtn un bouton "about this tab) */
+.landscape-about-btn {
+  margin-left: auto;
+  background: white;
+  border: 0.1rem solid #ddd;
+  border-radius: 0.4rem;
+  color: #475569;
+  white-space: nowrap;
 }
 
 
@@ -205,31 +224,29 @@
   display: grid;
   grid-template-columns: 1fr 3fr;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 
 /* ================================
-   COLONNE GAUCHE
+          COLONNE GAUCHE
    ================================ */
 
+/* Colonne gauche : Selection en haut, arbre occupant le reste */
 #landscapeCitySidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  height: 100%;
+  z-index: 900;
 }
 
-
-/* Bloc information */
-
-#landscapeCityInfo {
-  min-height: 30rem;
-}
 
 
 /* ================================
-   COLONNE DROITE
+          COLONNE DROITE
    ================================ */
+   
 
 #landscapeCityMain {
   display: flex;
@@ -243,6 +260,16 @@
 #landscapeCityGraph {
   min-height: 16rem;
 }
+
+/* Le titre de selection*/
+
+.landscape-graph-title > h4 {
+  font-size: 17px;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
 
 
 /* Placeholder temporaire du graphique */
@@ -410,6 +437,13 @@
   padding: 0.7rem 1rem;
 }
 
+/* Impact sélectionné */
+.landscape-impact-button.active {
+  background-color: #e2e8f0;
+  border: 1px solid #64748b;
+  font-weight: 600;
+}
+
 .landscape-tree-container {
   margin-top: 1.5rem;
   padding-top: 1rem;
@@ -521,45 +555,133 @@
 }
 
 
-      /* Legende du graph (impact-pressure-driver) + petit bouton (i) en bas*/
+      /* colonne de gauche Legende du graph (impact-pressure-driver) + petit bouton (i) en bas*/
+      
+/* Sélection de la ville et de la zone sur une même ligne */
+/* Ville et zone sur la même ligne */
+.landscape-selection-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
 
-/* Conteneur du graphique */
+/* Ville */
+.landscape-selection-city {
+  min-width: 0;
+  width: 100%;
+}
+
+/* SelectInput sur toute la largeur disponible */
+#landscape_city_selected,
+#landscapeCitySelection .landscape-selection-city .shiny-input-container {
+  width: 100% !important;
+}
+
+/* Zone */
+.landscape-selection-zone {
+  min-width: 0;
+}
+
+/* Marges des contrôles */
+#landscapeCitySelection .form-group {
+  margin-bottom: 0;
+} 
+
+/* Adaptation aux petits écrans */
+@media (max-width: 700px) {
+  .landscape-selection-row {
+    grid-template-columns: 1fr;
+  }
+}
+      
+/* Le titre de selection*/
+
+#landscapeCitySelection > h4 {
+  font-size: 17px;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* Bloc d'interprétation dans la colonne gauche */
+#landscapeCityTree {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Titre du bloc Interpretation */
+#landscapeCityTree > h4 {
+  font-size: 17px;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* Contenu généré par renderUI */
+.landscape-tree-container {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Graphique et panneau d'information empilés */
+.landscape-tree-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Graphique */
 .landscape-tree-wrapper {
   position: relative;
-  width: 100% ;
+  width: 100%;
+  min-width: 0;
+  padding-top: 50px; 
+  box-sizing: border-box;
   z-index: 1001;
+  
 }
 
+/* Panneau de définition */
+.landscape-tree-info-wrapper {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* Legende dans le graph (impact-pressure-driver) */
+/* Petite légende en haut à droite de l'arbre */
 .landscape-tree-legend {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
+  bottom: auto;
+  width: auto;
   z-index: 10;
   background: white;
-  padding: 10px 14px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  font-size: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 24px 8px 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  font-size: 11px;
   pointer-events: auto;
-  padding-right: 30px; /*reserve place à côté du titre */
-}
-
-.landscape-tree-legend strong {
-  display: block;
-  margin-bottom: 8px;
 }
 
 .landscape-tree-legend-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 5px 0;
+  gap: 6px;
+  margin: 3px 0;
 }
 
 .landscape-tree-legend-item span {
   display: inline-block;
-  width: 30px;
-  height: 16px;
+  width: 18px;
+  height: 12px;
   border-radius: 3px;
 }
 
@@ -579,18 +701,29 @@
   border: 2px solid #a78bfa;
 }
 
+
 /*le petit (i)*/
 
 /* Position du (i) dans la légende de l'arbre */
 .landscape-tree-legend .landscape-legend-info {
-  top: 10px;
-  right: 8px;
+  top: 5px;
+  right: 6px;
 }
 
 /* Fenêtre explicative de l'arbre */
 .landscape-tree-legend .landscape-legend-popup {
-  right: 0;
-  width: min(450px, 85vw);
+  position: absolute;
+  top: 0;
+  bottom: auto;
+  left: 100%;
+  right: auto;
+  /* Fenêtre plus large */
+  width: min(650px, 65vw);
+  max-width: none;
+  box-sizing: border-box;
+  max-height: 65vh;
+  overflow-y: auto;
+  z-index: 10000;
 }
 
 /*le titre du bloc (i)*/
@@ -598,29 +731,6 @@
   margin-bottom: 4px;
 }
 
-
-
-/*le bloc d'info qui apparait à côté de l'arbre graphique*/
-
-/* Disposition du panneau d'information et du graphique */
-.landscape-tree-layout {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-}
-
-/* Espace réservé au panneau d'information */
-.landscape-tree-info-wrapper {
-  width: 280px;
-  flex: 0 0 280px;
-  min-width: 0;
-}
-
-/* Graphique */
-.landscape-tree-layout .landscape-tree-wrapper {
-  flex: 1;
-  min-width: 0;
-}
 
 /* Panneau de définition */
 .landscape-city-node-info {
@@ -634,6 +744,8 @@
   line-height: 1.6;
 }
 
+
+/* gèrent l'apparence du panneau de définition */
 /* Type de nœud */
 .landscape-city-node-type {
   font-size: 11px;
@@ -654,14 +766,27 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 700px) {
-  .landscape-tree-layout {
-    flex-direction: column;
-  }
 
-  .landscape-city-node-info {
-    width: 100%;
-  }
+/* (i) Pour assoctiation dans l'appli */
+.landscape-associations-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+/* Petit (i) */
+.landscape-associations-info {
+  color: #64748b;
+  font-size: 14px;
+  cursor: help;
+}
+
+/* SelectInput sur toute la largeur */
+.landscape-associations-container .shiny-input-container {
+  width: 100%;
 }
 
                                     /* Onglet 4 */

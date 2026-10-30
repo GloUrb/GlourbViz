@@ -75,12 +75,41 @@ ui <- fluidPage(includeCSS("www/css.css"),
                     )
                   ),
                   
+                  
                   ############################ ONGLET landscape changes ##################################
                 
                   tabPanel(
                     "Landscape changes",
-                    # Boutons 
-                    uiOutput("landscape_view_buttons"),
+                    
+                    # Barre supérieure : navigation à gauche, information à droite
+                    tags$div(
+                      class = "landscape-topbar",
+                      
+                      tags$div(
+                        id = "landscapeViewButtons",
+                        
+                        actionButton(
+                          "landscape_global",
+                          "Global view",
+                          class = "landscape-view-btn active"
+                        ),
+                        
+                        actionButton(
+                          "landscape_city",
+                          "Local view",
+                          class = "landscape-view-btn"
+                        )
+                      ),
+                      
+                      actionButton(
+                        inputId = "landscape_city_info_btn",
+                        label = tagList(
+                          icon("info-circle"),
+                          "About this tab"
+                        ),
+                        class = "landscape-about-btn"
+                      )
+                    ),
                     
                                                         #le bt global view (onglet)
                     tags$div(
@@ -178,50 +207,50 @@ ui <- fluidPage(includeCSS("www/css.css"),
                           
                           tags$div(
                             class = "landscape-box",
-                            id = "landscapeCityInfo",
-                            tags$h4("Information"),
-                            tags$p("This tab is about changes in landscapes in corridors and floodplains in a context of generalized urbanization.",
-                                   style = "text-align: justify;"),
-                            tags$p("Most rivers now flow through urban areas (Paul et Meyer, 2008), putting considerable pressure on river systems, though the overall impact is not well known.
-                                  \n This study aims to  describe, quantify, understand and compare these changes. 
-                                   \n the hypothesis to be tested is that characteristics specific to urban and river systems control landscape evolution.
-                                   \n Using an existing database showing changes in water surfaces, this study analyzes the role of urbanization in modifying the river patterns in the vicinity of 300 urban areas worldwide. (F.Bourgeau et al, 2025)",
-                                   style = "text-align: justify;"
-                                   )
-                          ),
-                          
-                          tags$div(
-                            class = "landscape-box",
                             id = "landscapeCitySelection",
+                            
                             tags$h4("Selection"),
-                            selectInput(
-                              "landscape_city_selected",
-                              "City",
-                              choices = NULL
-                            ),
-                            tags$strong("Zone"),
-                            radioButtons(
-                              "landscape_zone_selected",
-                              NULL,
-                              choices = c(
-                                "Corridor" = "corridor",
-                                "Plain" = "plain"
+                            
+                            tags$div(
+                              class = "landscape-selection-row",
+                              
+                              # Ville à gauche
+                              tags$div(
+                                class = "landscape-selection-city",
+                                selectInput(
+                                  "landscape_city_selected",
+                                  "City",
+                                  choices = NULL,
+                                  width = "100%"
+                                )
                               ),
-                              selected = "plain" # defaut
+                              
+                              # Zone à droite
+                              tags$div(
+                                class = "landscape-selection-zone",
+                                radioButtons(
+                                  "landscape_zone_selected",
+                                  "Zone",
+                                  choices = c(
+                                    "Corridor" = "corridor",
+                                    "Plain" = "plain"
+                                  ),
+                                  selected = "plain"
+                                )
+                              )
                             )
                           ),
-                          
+                          # INTERPRETATION bloc dedans on va retrouver les impacts et tout ..
                           tags$div(
                             class = "landscape-box",
-                            id = "landscapeDataQuality",
-                            tags$h4("Data quality"),
-                            tags$p(
-                              "The methodology used in this study to explain the changes draws on the DPSIR framework (Driving forces, Pressures, State, Impacts, Responses).
-                              The objective is to identify and explain the impacts, pressures and driving forces.
-                              To this end, observations and interpretations of satellite imagery were carried out over several years, using the Google Earth Timelapse tool (a global, zoomable video that shows how the Earth has changed since 1984).
-                              Based on these observations, and in connection with a review of grey literature, the aim was to identify spatial recurrences that could explain the observed changes.",
-                              style = "text-align: justify;"
-                            )
+                            id = "landscapeCityTree",
+                            tags$h4("Interpretation"),
+                            # Choix de l'impact
+                            uiOutput("landscape_city_impacts_ui"),
+                            # Arbre
+                            uiOutput("landscape_city_tree_ui"),
+                            # Associations
+                            uiOutput("landscape_city_associations_ui")
                           )
                         ),
                         
@@ -244,7 +273,7 @@ ui <- fluidPage(includeCSS("www/css.css"),
                             plotOutput(
                               "landscape_pixel_graph",
                               width = "100%",
-                              height = "40vh"
+                              height = "25vh"
                             )
                           ),
                           #carte
@@ -254,23 +283,10 @@ ui <- fluidPage(includeCSS("www/css.css"),
                               leaflet::leafletOutput(
                                 "landscape_city_map",
                                 width = "100%",
-                                height = "66vh"
+                                height = "60vh"
                             )
                           )
                         )
-                      ),
-                      
-                      # INTERPRETATION bloc dedans on va retrouver les impacts et tout ..
-                      tags$div(
-                        class = "landscape-box",
-                        id = "landscapeInterpretation",
-                        tags$h4("Interpretation of observed landscape changes"),
-                        # Liste des impacts disponibles
-                        uiOutput("landscape_city_impacts_ui"),
-                        
-                        # Arbre des causes de l'impact sélectionné
-                        uiOutput("landscape_city_tree_ui"),
-                        shiny::uiOutput("landscape_city_associations_ui")
                       )
                     )
                   ),

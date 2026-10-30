@@ -192,7 +192,6 @@ server <- function(input, output, session) {
   
   
   
-  
       ## REACTIVES
   
 # Changmt des données cartographiques selon le mot sélectionné
@@ -565,6 +564,8 @@ server <- function(input, output, session) {
 
   ############################ Onglet landscapes changes ##################################
   
+  # Les boutons tt en haut
+  
 # La vue qui est sélec (le monde ou local)
   landscape_view_selected <- reactiveVal("global")
   observeEvent(input$landscape_global, {
@@ -585,33 +586,22 @@ server <- function(input, output, session) {
     }
   })
   
-  
-# les 2 boutons 
-  output$landscape_view_buttons <- renderUI({
-    tags$div(
-      id = "landscapeViewButtons",
-      #bt 1
-      actionButton(
-        "landscape_global",
-        "Global view",
-        class = if (landscape_view_selected() == "global") {
-          "landscape-view-btn active"
-        } else {
-          "landscape-view-btn"
-        }
-      ),
-      #bt 2
-      actionButton(
-        "landscape_city",
-        "Local view",
-        class = if (landscape_view_selected() == "city") {
-          "landscape-view-btn active"
-        } else {
-          "landscape-view-btn"
-        }
-      )
-    )
+# Permet de changer le CSS des boutons entre glb et city 
+  observeEvent(landscape_view_selected(), {
+    
+    vue <- landscape_view_selected()
+    
+    shinyjs::removeClass("landscape_global", "active")
+    shinyjs::removeClass("landscape_city", "active")
+    
+    if (vue == "global") {
+      shinyjs::addClass("landscape_global", "active")
+    } else if (vue == "city") {
+      shinyjs::addClass("landscape_city", "active")
+    }
+    
   })
+  
   
   ### Global View
   
@@ -1107,7 +1097,11 @@ server <- function(input, output, session) {
         actionButton(
           inputId = paste0("landscape_impact_", i),
           label = impacts[i],
-          class = "landscape-impact-button"
+          class = if (identical(impacts[i], landscape_selected_impact())) {
+            "landscape-impact-button active"
+          } else {
+            "landscape-impact-button"
+          }
         )
       })
     )
@@ -1126,22 +1120,17 @@ server <- function(input, output, session) {
       tags$h4(impact),
       tags$div(
         class = "landscape-tree-layout",
-        # Panneau à gauche, uniquement si un nœud est sélectionné
-        tags$div(
-          class = "landscape-tree-info-wrapper",
-          uiOutput("landscape_city_node_info_ui")
-        ),
+        # Graphique
       tags$div(
         class = "landscape-tree-wrapper",
         visNetwork::visNetworkOutput(
           "landscape_city_tree_graph",
           width = "100%",
-          height = "45vh"
+          height = "32vh"
         ),
         # Légende (+petit (i) à coté du titre)
         tags$div(
           class = "landscape-tree-legend",
-          tags$strong("Impact–Pressure–Driver framework"),
           #le petit (i)
           tags$span(
             class = "landscape-legend-info",
@@ -1169,7 +1158,16 @@ server <- function(input, output, session) {
                    it starts from the observed environmental impact, traces back to the pressures that caused it,
                    and then identifies the underlying driving forces (human activities and dynamics) responsible for these pressures.
                    This approach helps trace the causes of observed environmental changes and understand their underlying mechanisms.", 
-                   style = "text-align: justify;")
+                   style = "text-align: justify;"),
+            tags$p(""),
+            tags$strong("Data Quality"),
+            tags$p(
+                "The methodology used in this study to explain the changes draws on the DPSIR framework (Driving forces, Pressures, State, Impacts, Responses).
+                The objective is to identify and explain the impacts, pressures and driving forces.
+                To this end, observations and interpretations of satellite imagery were carried out over several years, using the Google Earth Timelapse tool (a global, zoomable video that shows how the Earth has changed since 1984).
+                Based on these observations, and in connection with a review of grey literature, the aim was to identify spatial recurrences that could explain the observed changes.",
+                style = "text-align: justify;"
+            )
             
           ),
           #fin petit (i)
@@ -1189,7 +1187,12 @@ server <- function(input, output, session) {
             "Driver"
             )
           )
-        )
+        ),
+      # Panneau def
+      tags$div(
+        class = "landscape-tree-info-wrapper",
+        uiOutput("landscape_city_node_info_ui")
+        ),
       )
     )
   })
@@ -1217,6 +1220,31 @@ server <- function(input, output, session) {
   
 
   ## observe
+  
+  
+# le bouton qui permet d'avoir les informations sur tout l'onglet   
+  observeEvent(input$landscape_city_info_btn, {
+    showModal(
+      modalDialog(
+        title = "Information : About Landscape Changes",
+        tags$p(
+          "This tab is about changes in landscapes in corridors and floodplains in a context of generalized urbanization.",
+          style = "text-align: justify;"
+        ),
+        tags$p(
+          "Most rivers now flow through urban areas (Paul et Meyer, 2008), putting considerable pressure on river systems, though the overall impact is not well known.
+          This study aims to  describe, quantify, understand and compare these changes. 
+          the hypothesis to be tested is that characteristics specific to urban and river systems control landscape evolution.
+          Using an existing database showing changes in water surfaces, this study analyzes the role of urbanization in modifying the river patterns in the vicinity of 300 urban areas worldwide. (F.Bourgeau et al, 2025)",
+          style = "text-align: justify;"
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        size = "m"
+      )
+    )
+  }) 
+  
   
 # ce code va servir à alimenter le selecteur des villes
   observe({
@@ -1260,17 +1288,24 @@ server <- function(input, output, session) {
     )
   })
   
+
   
-  # Réinitialiser la sélection si on change de ville ou de zone
-  observeEvent(
-    list(input$landscape_city_selected, input$landscape_zone_selected),
-    {
+# Sélection automatique du premier impact disponible
+# Lors du démarrage et à chaque changement de ville ou de zone
+  observeEvent(landscape_city_impacts(), {
+    # Réinitialiser les éléments liés à l'ancien contexte
+    landscape_selected_association(NULL)
+    landscape_selected_node(NULL)
+    # Récupérer les impacts disponibles
+    impacts <- landscape_city_impacts()$Impact
+    impacts <- unique(impacts[!is.na(impacts) & nzchar(impacts)])
+    # Sélectionner automatiquement le premier impact
+    if (length(impacts) > 0) {
+      landscape_selected_impact(impacts[1])
+    } else {
       landscape_selected_impact(NULL)
-      landscape_selected_association(NULL)
-      landscape_selected_node(NULL)
-    },
-    ignoreInit = TRUE
-  ) 
+    }
+  }, ignoreInit = FALSE) 
   
   
   ## Reactive
@@ -1420,9 +1455,17 @@ server <- function(input, output, session) {
 # Recup l'association sélectionnée par l'utilisateur
   landscape_selected_association <- reactiveVal(NULL)
   # Réinitialiser la sélection quand les associations changent
+  # Mettre à jour l'association lorsque les données changent
   observeEvent(landscape_city_associations(), {
-    landscape_selected_association(NULL)
+    donnees <- landscape_city_associations()
+    if (nrow(donnees) == 1) {
+      landscape_selected_association(donnees$association_id[1])
+    } else {
+      landscape_selected_association(NULL)
+    }
+    
   })
+  
   # Afficher les associations de l'impact sélectionné
   output$landscape_city_associations_ui <- renderUI({
     donnees <- landscape_city_associations()
@@ -1439,11 +1482,24 @@ server <- function(input, output, session) {
         dplyr::coalesce(as.character(donnees$Driver), "No driver")
       )
     )
-    shiny::selectInput(
-      inputId = "landscape_association_selected",
-      label = "Select an association to see where this spatial change occurs (in the map)",
-      choices = c("Choose an association" = "", choix),
-      selected = ""
+    tags$div(
+      class = "landscape-associations-container",
+      tags$div(
+        class = "landscape-associations-title",
+        tags$span("Associations"),
+        tags$span(
+          class = "landscape-associations-info",
+          title = "Select an association to see where this spatial change occurs (in the map)",
+          "\u24D8"
+        )
+      ),
+      shiny::selectInput(
+        inputId = "landscape_association_selected",
+        label = NULL,
+        choices = c("Choose an association" = "", choix),
+        selected = if (length(choix) == 1) unname(choix[1]) else "",
+        width = "100%"
+      )
     )
   })
   
@@ -1801,7 +1857,7 @@ if (layer) {
       nodes,
       edges,
       width = "100%",
-      height = "45vh"
+      height = "32vh"
     ) |>
       visNetwork::visNodes(
         shape = "box",
